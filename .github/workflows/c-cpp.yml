@@ -1,0 +1,19 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: install libupsclient-dev
+      run: |
+        sudo apt update -qq
+        sudo apt install -qq libupsclient-dev
+    - name: make
+      run: make LDFLAGS=-lupsclient main
