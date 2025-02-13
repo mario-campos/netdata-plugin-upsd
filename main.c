@@ -7,17 +7,24 @@
 
 #include <upsclient.h>
 
+#define NETDATA_PLUGIN_EXIT_DISABLE 1
+
 int main(int argc, char *argv[])
 {
-        int ret = upscli_init(0, NULL, NULL, NULL);
-        printf("upscli_init(0, NULL, NULL, NULL) = %d\n", ret);
-
-        puts("connecting to upsd");
+        int ret;
         UPSCONN_t ups;
-        assert(0 == upscli_connect(&ups, "127.0.0.1", 3493, 0));
-        puts("connected to upsd");
 
-        puts("listing UPSes");
+        if (-1 == upscli_init(0, NULL, NULL, NULL)) {
+                fputs("failed to initialize libupsclient", stderr);
+                exit(NETDATA_PLUGIN_EXIT_DISABLE);
+        }
+
+        // TODO: get address/port from configuration file
+        if (-1 == upscli_connect(&ups, "127.0.0.1", 3493, 0)) {
+                fputs("failed to connect to upsd at 127.0.0.1:3493", stderr);
+                exit(NETDATA_PLUGIN_EXIT_DISABLE);
+        }
+        
         size_t numq = 1;
         const char *query[2];
         query[0] = "UPS";
@@ -32,7 +39,6 @@ int main(int argc, char *argv[])
         ret = upscli_list_next(&ups, numq, query, &numa, (char***)&answers);
         if (ret == 0) puts("done listing UPSes");
 
-        puts("listing variables");
         numq = 2;
         query[0] = "VAR";
         query[1] = ups_name;
@@ -48,9 +54,6 @@ int main(int argc, char *argv[])
 
         if (ret == 0) puts("done listing UPSes");
 
-        puts("disconnecting from upsd");
-        assert(0 == upscli_disconnect(&ups));
-        puts("disconnected from upsd");
-
+        upscli_disconnect(&ups);
         upscli_cleanup();
 }
