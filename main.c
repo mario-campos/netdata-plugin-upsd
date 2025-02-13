@@ -20,6 +20,7 @@ int main(int argc, char *argv[])
         // this plugin, since it cannot offer any metrics.
         if (-1 == upscli_init(0, NULL, NULL, NULL)) {
                 fputs("failed to initialize libupsclient", stderr);
+                puts("DISABLE");
                 exit(NETDATA_PLUGIN_EXIT_DISABLE);
         }
 
@@ -27,6 +28,7 @@ int main(int argc, char *argv[])
         if (-1 == upscli_connect(&ups, "127.0.0.1", 3493, 0)) {
                 upscli_cleanup();
                 fputs("failed to connect to upsd at 127.0.0.1:3493", stderr);
+                puts("DISABLE");
                 exit(NETDATA_PLUGIN_EXIT_DISABLE);
         }
         
