@@ -25,6 +25,7 @@ int main(int argc, char *argv[])
 
         // TODO: get address/port from configuration file
         if (-1 == upscli_connect(&ups, "127.0.0.1", 3493, 0)) {
+                upscli_cleanup();
                 fputs("failed to connect to upsd at 127.0.0.1:3493", stderr);
                 exit(NETDATA_PLUGIN_EXIT_DISABLE);
         }
