@@ -16,4 +16,4 @@ jobs:
         sudo apt update -qq
         sudo apt install -qq libupsclient-dev
     - name: make
-      run: make LDFLAGS=-lupsclient main
+      run: cc main.c -lupsclient
