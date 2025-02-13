@@ -7,6 +7,7 @@
 
 #include <upsclient.h>
 
+// https://learn.netdata.cloud/docs/developer-and-contributor-corner/external-plugins#disable
 #define NETDATA_PLUGIN_EXIT_DISABLE 1
 
 int main(int argc, char *argv[])
@@ -14,6 +15,9 @@ int main(int argc, char *argv[])
         int ret;
         UPSCONN_t ups;
 
+        // If we fail to initialize libupsclient or connect to a local
+        // UPS, then there's nothing more to be done; Netdata should disable
+        // this plugin, since it cannot offer any metrics.
         if (-1 == upscli_init(0, NULL, NULL, NULL)) {
                 fputs("failed to initialize libupsclient", stderr);
                 exit(NETDATA_PLUGIN_EXIT_DISABLE);
