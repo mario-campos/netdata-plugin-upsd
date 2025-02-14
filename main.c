@@ -7,8 +7,10 @@
 #include <bsd/string.h>
 #include <upsclient.h>
 
+// https://learn.netdata.cloud/docs/developer-and-contributor-corner/external-plugins#operation
+#define NETDATA_PLUGIN_EXIT_AND_RESTART 0
 // https://learn.netdata.cloud/docs/developer-and-contributor-corner/external-plugins#disable
-#define NETDATA_PLUGIN_EXIT_DISABLE 1
+#define NETDATA_PLUGIN_EXIT_AND_DISABLE 1
 
 #define LISTUPS_NUMQ 1
 #define LISTVAR_NUMQ 2
@@ -29,7 +31,7 @@ int main(int argc, char *argv[])
         if (-1 == upscli_init(0, NULL, NULL, NULL)) {
                 fputs("error: failed to initialize libupsclient", stderr);
                 puts("DISABLE");
-                exit(NETDATA_PLUGIN_EXIT_DISABLE);
+                exit(NETDATA_PLUGIN_EXIT_AND_DISABLE);
         }
 
         // TODO: get address/port from configuration file
@@ -38,7 +40,7 @@ int main(int argc, char *argv[])
                 upscli_cleanup();
                 fputs("error: failed to connect to upsd at 127.0.0.1:3493", stderr);
                 puts("DISABLE");
-                exit(NETDATA_PLUGIN_EXIT_DISABLE);
+                exit(NETDATA_PLUGIN_EXIT_AND_DISABLE);
         }
 
         // Query upsd for UPSes with the 'LIST UPS' command.
