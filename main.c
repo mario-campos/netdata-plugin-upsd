@@ -44,7 +44,11 @@ int main(int argc, char *argv[])
         const char *ups_name = strdup(answers[0][1]);
 
         status = upscli_list_next(&ups, numq, query, &numa, (char***)&answers);
-        if (0 == status) puts("done listing UPSes");
+        if (-1 == status) {
+                fprintf(stderr, "error: failed to retrieve data from upsd: libupsclient: %s",
+                    upscli_strerror(&ups)
+                );
+        }
 
         numq = 2;
         query[0] = "VAR";
@@ -59,7 +63,11 @@ int main(int argc, char *argv[])
                 printf("\n");
         } while (1 == status);
 
-        if (0 == status) puts("done listing UPSes");
+        if (-1 == status) {
+                fprintf(stderr, "error: failed to retrieve data from upsd: libupsclient: %s",
+                    upscli_strerror(&ups)
+                );
+        }
 
         upscli_disconnect(&ups);
         upscli_cleanup();
