@@ -5,6 +5,7 @@
 #include <string.h>
 #include <time.h>
 
+#include <bsd/string.h>
 #include <upsclient.h>
 
 // https://learn.netdata.cloud/docs/developer-and-contributor-corner/external-plugins#disable
@@ -15,7 +16,7 @@ int main(int argc, char *argv[])
         int status;
         size_t numq, numa;
         const char *query[2];
-        char **answers[1];
+        char **answers[1], ups_name[64];
         UPSCONN_t ups;
 
         // If we fail to initialize libupsclient or connect to a local
@@ -41,7 +42,7 @@ int main(int argc, char *argv[])
 
         assert(1 == upscli_list_next(&ups, numq, query, &numa, (char***)&answers));
         printf("LIST %s %s %s\n", answers[0][0], answers[0][1], answers[0][2]);
-        const char *ups_name = strdup(answers[0][1]);
+        strlcpy(ups_name, answers[0][1], sizeof(ups_name));
 
         status = upscli_list_next(&ups, numq, query, &numa, (char***)&answers);
         if (-1 == status) {
