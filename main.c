@@ -12,7 +12,10 @@
 
 int main(int argc, char *argv[])
 {
-        int ret;
+        int status;
+        size_t numq, numa;
+        const char *query[2];
+        char **answers[1];
         UPSCONN_t ups;
 
         // If we fail to initialize libupsclient or connect to a local
@@ -32,19 +35,16 @@ int main(int argc, char *argv[])
                 exit(NETDATA_PLUGIN_EXIT_DISABLE);
         }
         
-        size_t numq = 1;
-        const char *query[2];
+        numq = 1;
         query[0] = "UPS";
         assert(0 == upscli_list_start(&ups, numq, query));
 
-        size_t numa;
-        char **answers[1];
         assert(1 == upscli_list_next(&ups, numq, query, &numa, (char***)&answers));
         printf("LIST %s %s %s\n", answers[0][0], answers[0][1], answers[0][2]);
         const char *ups_name = strdup(answers[0][1]);
 
-        ret = upscli_list_next(&ups, numq, query, &numa, (char***)&answers);
-        if (ret == 0) puts("done listing UPSes");
+        status = upscli_list_next(&ups, numq, query, &numa, (char***)&answers);
+        if (0 == status) puts("done listing UPSes");
 
         numq = 2;
         query[0] = "VAR";
@@ -52,14 +52,14 @@ int main(int argc, char *argv[])
         assert(0 == upscli_list_start(&ups, numq, query));
 
         do {
-                ret = upscli_list_next(&ups, numq, query, &numa, (char***)&answers);
+                status = upscli_list_next(&ups, numq, query, &numa, (char***)&answers);
                 for (size_t i = 0; i < numa; i++) {
                         printf("%s ", answers[0][i]);
                 }
                 printf("\n");
-        } while (1 == ret);
+        } while (1 == status);
 
-        if (ret == 0) puts("done listing UPSes");
+        if (0 == status) puts("done listing UPSes");
 
         upscli_disconnect(&ups);
         upscli_cleanup();
