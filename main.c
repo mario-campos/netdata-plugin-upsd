@@ -100,6 +100,10 @@ int main(int argc, char *argv[])
                 );
         }
 
+        // Flush the data out of the stream buffer to ensure netdata gets it immediately.
+        // https://learn.netdata.cloud/docs/developer-and-contributor-corner/external-plugins#the-output-of-the-plugin
+        fflush(stdout);
+
         upscli_disconnect(&listups_conn);
         upscli_disconnect(&listvar_conn);
         upscli_cleanup();
