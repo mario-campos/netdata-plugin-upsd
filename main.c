@@ -4,7 +4,6 @@
 #include <string.h>
 #include <time.h>
 
-#include <bsd/string.h>
 #include <upsclient.h>
 
 // https://learn.netdata.cloud/docs/developer-and-contributor-corner/external-plugins#operation
@@ -18,11 +17,10 @@
 int main(int argc, char *argv[])
 {
         size_t numa;
-        char **answers[1];
+        char **listups_answer[1], **listvar_answer[1];
         int listups_status, listvar_status;
         const char *listups_query[LISTUPS_NUMQ] = { "UPS" };
         const char *listvar_query[LISTVAR_NUMQ] = { "VAR" };
-        char ups_id[64];
         UPSCONN_t listups_conn, listvar_conn;
 
         // If we fail to initialize libupsclient or connect to a local
@@ -51,18 +49,15 @@ int main(int argc, char *argv[])
         }
 
         do {
-                listups_status = upscli_list_next(&listups_conn, LISTUPS_NUMQ, listups_query, &numa, (char***)&answers);
+                listups_status = upscli_list_next(&listups_conn, LISTUPS_NUMQ, listups_query, &numa, (char***)&listups_answer);
 
                 // Unfortunately, upscli_list_next() will emit the list delimiter
                 // "END LIST UPS" as its last iteration before returning 0. We don't
                 // need it, so let's skip processing on that item.
-                 if (!strcmp("END", answers[0][0]))
+                 if (!strcmp("END", listups_answer[0][0]))
                          continue;
 
-                // Since we don't know how libupsclient allocates or deallocates
-                // memory, it would be unwise to feed it a query that it would
-                // then deallocate at some point. So, copy it to be safe.
-                strlcpy(ups_id, answers[0][LISTUPS_NUMQ], sizeof(ups_id));
+                char *ups_id = listups_answer[0][LISTUPS_NUMQ];
 
                 // Query upsd for UPS properties with the 'LIST VAR <ups>' command.
                 listvar_query[1] = ups_id;
@@ -73,17 +68,17 @@ int main(int argc, char *argv[])
                 }
 
                 do {
-                        listvar_status = upscli_list_next(&listvar_conn, LISTVAR_NUMQ, listvar_query, &numa, (char***)&answers);
+                        listvar_status = upscli_list_next(&listvar_conn, LISTVAR_NUMQ, listvar_query, &numa, (char***)&listvar_answer);
 
                         // Unfortunately, upscli_list_next() will emit the list delimiter
                         // "END LIST VAR" as its last iteration before returning 0. We don't
                         // need it, so let's skip processing on that item.
-                        if (!strcmp("END", answers[0][0]))
+                        if (!strcmp("END", listvar_answer[0][0]))
                                 continue;
 
                         for (size_t i = 0; i < numa; i++) {
                                 // TODO: print the metrics to stdout for Netdata.
-                                printf("%s ", answers[0][i]);
+                                printf("%s ", listvar_answer[0][i]);
                         }
                         printf("\n");
                 } while (1 == listvar_status);
