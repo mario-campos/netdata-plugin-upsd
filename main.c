@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
                 listups_status = upscli_list_next(&listups_conn, LISTUPS_NUMQ, listups_query, &numa, (char***)&answers);
 
                 // Unfortunately, upscli_list_next() will emit the list delimiter
-                // "END LIST UPS" as its list iteration before returning 0. We don't
+                // "END LIST UPS" as its last iteration before returning 0. We don't
                 // need it, so let's skip processing on that item.
                  if (!strcmp("END", answers[0][0]))
                          continue;
@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
                         listvar_status = upscli_list_next(&listvar_conn, LISTVAR_NUMQ, listvar_query, &numa, (char***)&answers);
 
                         // Unfortunately, upscli_list_next() will emit the list delimiter
-                        // "END LIST VAR" as its list iteration before returning 0. We don't
+                        // "END LIST VAR" as its last iteration before returning 0. We don't
                         // need it, so let's skip processing on that item.
                         if (!strcmp("END", answers[0][0]))
                                 continue;
