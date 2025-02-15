@@ -73,8 +73,7 @@ int main(int argc, char *argv[])
                         // Unfortunately, upscli_list_next() will emit the list delimiter
                         // "END LIST VAR" as its last iteration before returning 0. We don't
                         // need it, so let's skip processing on that item.
-                        if (!strcmp("END", listvar_answer[0][0]))
-                                continue;
+                        if (numa < 4) continue;
 
                         for (size_t i = 0; i < numa; i++) {
                                 // TODO: print the metrics to stdout for Netdata.
