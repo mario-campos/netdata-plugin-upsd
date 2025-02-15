@@ -75,11 +75,14 @@ int main(int argc, char *argv[])
                         // need it, so let's skip processing on that item.
                         if (numa < 4) continue;
 
-                        for (size_t i = 0; i < numa; i++) {
-                                // TODO: print the metrics to stdout for Netdata.
-                                printf("%s ", listvar_answer[0][i]);
-                        }
-                        printf("\n");
+                        const char *variable = listvar_answer[0][2];
+                        const char *value = listvar_answer[0][3];
+
+                        // TODO: Lookup variable and replace with type.id:
+                        //   BEGIN type.id
+                        //   SET id = value
+                        //   END
+                        printf("BEGIN %s\nSET %s = %s\nEND\n", variable, variable, value);
                 } while (1 == listvar_status);
 
                 if (-1 == listvar_status) {
