@@ -11,9 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - name: install libupsclient-dev
+    - name: install dependencies
       run: |
         sudo apt update -qq
-        sudo apt install -qq libupsclient-dev
+        sudo apt install -qq libupsclient-dev libgenht1-dev
     - name: make
-      run: clang -Wall main.c -lupsclient
+      run: clang -Wall main.c -lupsclient -lgenht
