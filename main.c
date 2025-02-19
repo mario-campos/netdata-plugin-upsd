@@ -50,27 +50,30 @@
 #define LISTVAR_ANS_VAR_NAME  2 // <variable>
 #define LISTVAR_ANS_VAR_VALUE 3 // <value>
 
-#define UPS_STATUS_BIT_OL      0x0001
-#define UPS_STATUS_BIT_OB      0x0002
-#define UPS_STATUS_BIT_LB      0x0004
-#define UPS_STATUS_BIT_HB      0x0008
-#define UPS_STATUS_BIT_RB      0x0010
-#define UPS_STATUS_BIT_CHRG    0x0020
-#define UPS_STATUS_BIT_DISCHRG 0x0040
-#define UPS_STATUS_BIT_BYPASS  0x0080
-#define UPS_STATUS_BIT_CAL     0x0100
-#define UPS_STATUS_BIT_OFF     0x0200
-#define UPS_STATUS_BIT_OVER    0x0400
-#define UPS_STATUS_BIT_TRIM    0x0800
-#define UPS_STATUS_BIT_BOOST   0x1000
-#define UPS_STATUS_BIT_FSD     0x2000
-#define UPS_STATUS_BIT_OTHER   0x4000
+// https://networkupstools.org/docs/developer-guide.chunked/new-drivers.html#_status_data
+struct nut_ups_status {
+        unsigned int OL      : 1; // On line
+        unsigned int OB      : 1; // On battery
+        unsigned int LB      : 1; // Low battery
+        unsigned int HB      : 1; // High battery
+        unsigned int RB      : 1; // The battery needs to be replaced
+        unsigned int CHRG    : 1; // The battery is charging
+        unsigned int DISCHRG : 1; // The battery is discharging (inverter is providing load power)
+        unsigned int BYPASS  : 1; // UPS bypass circuit is active -- no battery protection is available
+        unsigned int CAL     : 1; // UPS is currently performing runtime calibration (on battery)
+        unsigned int OFF     : 1; // UPS is offline and is not supplying power to the load
+        unsigned int OVER    : 1; // UPS is overloaded
+        unsigned int TRIM    : 1; // UPS is trimming incoming voltage (called "buck" in some hardware)
+        unsigned int BOOST   : 1; // UPS is boosting incoming voltage
+        unsigned int FSD     : 1; // Forced Shutdown
+        unsigned int OTHER   : 1;
+};
 
 // This function parses the 'ups.status' variable and emits the Netdata metrics
 // for each status, printing 1 for each set status and 0 otherwise.
 static inline void print_ups_status_metrics(const char *ups_name, const char *value)
 {
-        uint16_t status = 0;
+        struct nut_ups_status status = { 0 };
 
         for (const char *c = value; *c; c++) {
                 switch (*c) {
@@ -78,76 +81,76 @@ static inline void print_ups_status_metrics(const char *ups_name, const char *va
                         continue;
                 case 'L':
                         c++;
-                        status |= UPS_STATUS_BIT_LB;
+                        status.LB = 1;
                         break;
                 case 'H':
                         c++;
-                        status |= UPS_STATUS_BIT_HB;
+                        status.HB = 1;
                         break;
                 case 'R':
                         c++;
-                        status |= UPS_STATUS_BIT_RB;
+                        status.RB = 1;
                         break;
                 case 'D':
                         c += 6;
-                        status |= UPS_STATUS_BIT_DISCHRG;
+                        status.DISCHRG = 1;
                         break;
                 case 'T':
                         c += 3;
-                        status |= UPS_STATUS_BIT_TRIM;
+                        status.TRIM = 1;
                         break;
                 case 'F':
                         c += 2;
-                        status |= UPS_STATUS_BIT_FSD;
+                        status.FSD = 1;
                         break;
                 case 'B':
                         switch (*++c) {
                         case 'O':
                                 c += 3;
-                                status |= UPS_STATUS_BIT_BOOST;
+                                status.BOOST = 1;
                                 break;
                         case 'Y':
                                 c += 4;
-                                status |= UPS_STATUS_BIT_BYPASS;
+                                status.BYPASS = 1;
                                 break;
                         default:
-                                status |= UPS_STATUS_BIT_OTHER;
+                                status.OTHER = 1;
                                 break;
                         }
                 case 'C':
                         switch (*++c) {
                         case 'H':
                                 c += 2;
-                                status |= UPS_STATUS_BIT_CHRG;
+                                status.CHRG = 1;
                                 break;
                         case 'A':
                                 c++;
-                                status |= UPS_STATUS_BIT_CAL;
+                                status.CAL = 1;
                                 break;
                         default:
-                                status |= UPS_STATUS_BIT_OTHER;
+                                status.OTHER = 1;
                                 break;
                         }
                 case 'O':
                         switch (*++c) {
                         case 'B':
-                                status |= UPS_STATUS_BIT_OB;
+                                status.OB = 1;
                                 break;
                         case 'F':
-                                status |= UPS_STATUS_BIT_OFF;
+                                status.OFF = 1;
                                 break;
                         case 'L':
-                                status |= UPS_STATUS_BIT_OL;
+                                status.OL = 1;
                                 break;
                         case 'V':
                                 c += 2;
-                                status |= UPS_STATUS_BIT_OVER;
+                                status.OVER = 1;
                                 break;
                         default:
                                 /* fallthrough */
                         }
                 default:
-                        status |= UPS_STATUS_BIT_OTHER;
+                        status.OTHER = 1;
                         break;
                 }
         }
@@ -170,21 +173,21 @@ static inline void print_ups_status_metrics(const char *ups_name, const char *va
                "SET ups_%s_ups.status.other = %u\n"
                "END\n",
                ups_name,
-               ups_name, !!(status & UPS_STATUS_BIT_OL),
-               ups_name, !!(status & UPS_STATUS_BIT_OB),
-               ups_name, !!(status & UPS_STATUS_BIT_LB),
-               ups_name, !!(status & UPS_STATUS_BIT_HB),
-               ups_name, !!(status & UPS_STATUS_BIT_RB),
-               ups_name, !!(status & UPS_STATUS_BIT_CHRG),
-               ups_name, !!(status & UPS_STATUS_BIT_DISCHRG),
-               ups_name, !!(status & UPS_STATUS_BIT_BYPASS),
-               ups_name, !!(status & UPS_STATUS_BIT_CAL),
-               ups_name, !!(status & UPS_STATUS_BIT_OFF),
-               ups_name, !!(status & UPS_STATUS_BIT_OVER),
-               ups_name, !!(status & UPS_STATUS_BIT_TRIM),
-               ups_name, !!(status & UPS_STATUS_BIT_BOOST),
-               ups_name, !!(status & UPS_STATUS_BIT_FSD),
-               ups_name, !!(status & UPS_STATUS_BIT_OTHER));
+               ups_name, status.OL,
+               ups_name, status.OB,
+               ups_name, status.LB,
+               ups_name, status.HB,
+               ups_name, status.RB,
+               ups_name, status.CHRG,
+               ups_name, status.DISCHRG,
+               ups_name, status.BYPASS,
+               ups_name, status.CAL,
+               ups_name, status.OFF,
+               ups_name, status.OVER,
+               ups_name, status.TRIM,
+               ups_name, status.BOOST,
+               ups_name, status.FSD,
+               ups_name, status.OTHER);
 }
 
 int main(int argc, char *argv[])
