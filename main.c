@@ -1,8 +1,10 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 
 #include <genht/htss.h>
 #include <genht/hash.h>
@@ -10,32 +12,15 @@
 #include <upsclient.h>
 
 // https://learn.netdata.cloud/docs/developer-and-contributor-corner/external-plugins#operation
-#define NETDATA_UPSD_EXIT_AND_RESTART 0
+#define NETDATA_PLUGIN_EXIT_AND_RESTART 0
 // https://learn.netdata.cloud/docs/developer-and-contributor-corner/external-plugins#disable
-#define NETDATA_UPSD_EXIT_AND_DISABLE 1
+#define NETDATA_PLUGIN_EXIT_AND_DISABLE 1
 
-// This arbitrary base priority was copied from Netdata's go.d orchestrator plugin.
-#define NETDATA_UPSD_PRIO                     70000
-#define NETDATA_UPSD_PRIO_LOAD                ( 0 + NETDATA_UPSD_PRIO)
-#define NETDATA_UPSD_PRIO_LOAD_USAGE          ( 1 + NETDATA_UPSD_PRIO)
-#define NETDATA_UPSD_PRIO_STATUS              ( 2 + NETDATA_UPSD_PRIO)
-#define NETDATA_UPSD_PRIO_TEMP                ( 3 + NETDATA_UPSD_PRIO)
-#define NETDATA_UPSD_PRIO_BATT_CHARGE         ( 4 + NETDATA_UPSD_PRIO)
-#define NETDATA_UPSD_PRIO_BATT_ESTRUN         ( 5 + NETDATA_UPSD_PRIO)
-#define NETDATA_UPSD_PRIO_BATT_VOLT           ( 6 + NETDATA_UPSD_PRIO)
-#define NETDATA_UPSD_PRIO_BATT_VOLT_NOMINAL   ( 7 + NETDATA_UPSD_PRIO)
-#define NETDATA_UPSD_PRIO_INPUT_VOLT          ( 8 + NETDATA_UPSD_PRIO)
-#define NETDATA_UPSD_PRIO_INPUT_VOLT_NOMINAL  ( 9 + NETDATA_UPSD_PRIO)
-#define NETDATA_UPSD_PRIO_INPUT_CURR          (10 + NETDATA_UPSD_PRIO)
-#define NETDATA_UPSD_PRIO_INPUT_CURR_NOMINAL  (11 + NETDATA_UPSD_PRIO)
-#define NETDATA_UPSD_PRIO_INPUT_FREQ          (12 + NETDATA_UPSD_PRIO)
-#define NETDATA_UPSD_PRIO_INPUT_FREQ_NOMINAL  (13 + NETDATA_UPSD_PRIO)
-#define NETDATA_UPSD_PRIO_OUTPUT_VOLT         (14 + NETDATA_UPSD_PRIO)
-#define NETDATA_UPSD_PRIO_OUTPUT_VOLT_NOMINAL (15 + NETDATA_UPSD_PRIO)
-#define NETDATA_UPSD_PRIO_OUTPUT_CURR         (16 + NETDATA_UPSD_PRIO)
-#define NETDATA_UPSD_PRIO_OUTPUT_CURR_NOMINAL (17 + NETDATA_UPSD_PRIO)
-#define NETDATA_UPSD_PRIO_OUTPUT_FREQ         (18 + NETDATA_UPSD_PRIO)
-#define NETDATA_UPSD_PRIO_OUTPUT_FREQ_NOMINAL (19 + NETDATA_UPSD_PRIO)
+// https://learn.netdata.cloud/docs/developer-and-contributor-corner/external-plugins/#clabel
+#define NETDATA_PLUGIN_CLABEL_SOURCE_AUTO   1
+#define NETDATA_PLUGIN_CLABEL_SOURCE_MANUAL 2
+#define NETDATA_PLUGIN_CLABEL_SOURCE_K8     4
+#define NETDATA_PLUGIN_CLABEL_SOURCE_AGENT  8
 
 // This macro defines the number of arguments in the "LIST UPS" query.
 // Since "LIST" is implied, there is only one argument: "UPS".
@@ -68,6 +53,338 @@ struct nut_ups_status {
         unsigned int FSD     : 1; // Forced Shutdown
         unsigned int OTHER   : 1;
 };
+
+// https://learn.netdata.cloud/docs/developer-and-contributor-corner/external-plugins/#chart
+struct ups_var_chart {
+        const char *name;
+        const char *chart_id;
+        const char *chart_name;
+        const char *chart_title;
+        const char *chart_units;
+        const char *chart_family;
+        const char *chart_context;
+        const char *chart_type;
+        unsigned int chart_priority;
+        const size_t chart_dimlength;
+        const char *chart_dimension[15];
+};
+
+const struct ups_var_chart ups_var_charts[] = {
+        {
+                .name = "ups.load",
+                .chart_id = "load_percentage",
+                .chart_title = "UPS load",
+                .chart_units = "percentage",
+                .chart_family = "ups",
+                .chart_context = "upsd.ups_load",
+                .chart_type = "area",
+                .chart_priority = 70000,
+                .chart_dimlength = 1,
+                .chart_dimension = { "load" },
+        },
+        {
+                // TODO: this is not a real variable from NUT
+                .name = "ups.load_usage",
+                .chart_id = "load_usage",
+                .chart_title = "UPS load usage (power output)",
+                .chart_units = "Watts",
+                .chart_family = "ups",
+                .chart_context = "upsd.ups_load_usage",
+                .chart_type = "line",
+                .chart_priority = 70001,
+                .chart_dimlength = 1,
+                .chart_dimension = { "load_usage" },
+        },
+        {
+                .name = "ups.status",
+                .chart_id = "status",
+                .chart_title = "UPS status",
+                .chart_units = "status",
+                .chart_family = "ups",
+                .chart_context = "upsd.ups_status",
+                .chart_type = "line",
+                .chart_priority = 70002,
+                .chart_dimlength = 15,
+                .chart_dimension = {
+                        "on_line",
+                        "on_battery",
+                        "low_battery",
+                        "high_battery",
+                        "replace_battery",
+                        "charging",
+                        "discharging",
+                        "bypass",
+                        "calibration",
+                        "offline",
+                        "overloaded",
+                        "trim_input_voltage",
+                        "boost_input_voltage",
+                        "forced_shutdown",
+                        "other",
+                },
+        },
+        {
+                .name = "ups.temperature",
+                .chart_id = "temperature",
+                .chart_title = "UPS temperature",
+                .chart_units = "Celsius",
+                .chart_family = "ups",
+                .chart_context = "upsd.ups_temperature",
+                .chart_type = "line",
+                .chart_priority = 70003,
+                .chart_dimlength = 1,
+                .chart_dimension = { "temperature" },
+        },
+        {
+                .name = "battery.charge",
+                .chart_id = "battery_charge_percentage",
+                .chart_title = "UPS Battery charge",
+                .chart_units = "percentage",
+                .chart_family = "battery",
+                .chart_context = "upsd.ups_battery_charge",
+                .chart_type = "area",
+                .chart_priority = 70004,
+                .chart_dimlength = 1,
+                .chart_dimension = { "charge" },
+        },
+        {
+                .name = "battery.runtime",
+                .chart_id = "battery_estimated_runtime",
+                .chart_title = "UPS Battery estimated runtime",
+                .chart_units = "seconds",
+                .chart_family = "battery",
+                .chart_context = "upsd.ups_battery_estimated_runtime",
+                .chart_type = "line",
+                .chart_priority = 70005,
+                .chart_dimlength = 1,
+                .chart_dimension = { "runtime" },
+        },
+        {
+                .name = "battery.voltage",
+                .chart_id = "battery_voltage",
+                .chart_title = "UPS Battery voltage",
+                .chart_units = "Volts",
+                .chart_family = "battery",
+                .chart_context = "upsd.ups_battery_voltage",
+                .chart_type = "line",
+                .chart_priority = 70006,
+                .chart_dimlength = 1,
+                .chart_dimension = { "voltage" },
+        },
+        {
+                .name = "battery.voltage.nominal",
+                .chart_id = "battery_voltage_nominal",
+                .chart_title = "UPS Battery voltage nominal",
+                .chart_units = "Volts",
+                .chart_family = "battery",
+                .chart_context = "upsd.ups_battery_voltage_nominal",
+                .chart_type = "line",
+                .chart_priority = 70007,
+                .chart_dimlength = 1,
+                .chart_dimension = { "nominal_voltage" },
+        },
+        {
+                .name = "input.voltage",
+                .chart_id = "input_voltage",
+                .chart_title = "UPS Input voltage",
+                .chart_units = "Volts",
+                .chart_family = "input",
+                .chart_context = "upsd.ups_input_voltage",
+                .chart_type = "line",
+                .chart_priority = 70008,
+                .chart_dimlength = 1,
+                .chart_dimension = { "voltage" },
+        },
+        {
+                .name = "input.voltage.nominal",
+                .chart_id = "input_voltage_nominal",
+                .chart_title = "UPS Input voltage nominal",
+                .chart_units = "Volts",
+                .chart_family = "input",
+                .chart_context = "upsd.ups_input_voltage_nominal",
+                .chart_type = "line",
+                .chart_priority = 70009,
+                .chart_dimlength = 1,
+                .chart_dimension = { "nominal_voltage" },
+        },
+        {
+                .name = "input.current",
+                .chart_id = "input_current",
+                .chart_title = "UPS Input current",
+                .chart_units = "Ampere",
+                .chart_family = "input",
+                .chart_context = "upsd.ups_input_current",
+                .chart_type = "line",
+                .chart_priority = 70010,
+                .chart_dimlength = 1,
+                .chart_dimension = { "current" },
+        },
+        {
+                .name = "input.current.nominal",
+                .chart_id = "input_current_nominal",
+                .chart_title = "UPS Input current nominal",
+                .chart_units = "Ampere",
+                .chart_family = "input",
+                .chart_context = "upsd.ups_input_current_nominal",
+                .chart_type = "line",
+                .chart_priority = 70011,
+                .chart_dimlength = 1,
+                .chart_dimension = { "nominal_current" },
+        },
+        {
+                .name = "input.frequency",
+                .chart_id = "input_frequency",
+                .chart_title = "UPS Input frequency",
+                .chart_units = "Hz",
+                .chart_family = "input",
+                .chart_context = "upsd.ups_input_frequency",
+                .chart_type = "line",
+                .chart_priority = 70012,
+                .chart_dimlength = 1,
+                .chart_dimension = { "frequency" },
+        },
+        {
+                .name = "input.frequency.nominal",
+                .chart_id = "input_frequency_nominal",
+                .chart_title = "UPS Input frequency nominal",
+                .chart_units = "Hz",
+                .chart_family = "input",
+                .chart_context = "upsd.ups_input_frequency_nominal",
+                .chart_type = "line",
+                .chart_priority = 70013,
+                .chart_dimlength = 1,
+                .chart_dimension = { "nominal_frequency" },
+        },
+        {
+                .name = "output.voltage",
+                .chart_id = "output_voltage",
+                .chart_title = "UPS Output voltage",
+                .chart_units = "Volts",
+                .chart_family = "output",
+                .chart_context = "upsd.ups_output_voltage",
+                .chart_type = "line",
+                .chart_priority = 70014,
+                .chart_dimlength = 1,
+                .chart_dimension = { "voltage" },
+        },
+        {
+                .name = "output.voltage.nominal",
+                .chart_id = "output_voltage_nominal",
+                .chart_title = "UPS Output voltage nominal",
+                .chart_units = "Volts",
+                .chart_family = "output",
+                .chart_context = "upsd.ups_output_voltage_nominal",
+                .chart_type = "line",
+                .chart_priority = 70015,
+                .chart_dimlength = 1,
+                .chart_dimension = { "nominal_voltage" },
+        },
+        {
+                .name = "output.current",
+                .chart_id = "output_current",
+                .chart_title = "UPS Output current",
+                .chart_units = "Ampere",
+                .chart_family = "output",
+                .chart_context = "upsd.ups_output_current",
+                .chart_type = "line",
+                .chart_priority = 70016,
+                .chart_dimlength = 1,
+                .chart_dimension = { "current" },
+        },
+        {
+                .name = "output.current.nominal",
+                .chart_id = "output_current_nominal",
+                .chart_title = "UPS Output current nominal",
+                .chart_units = "Ampere",
+                .chart_family = "output",
+                .chart_context = "upsd.ups_output_current_nominal",
+                .chart_type = "line",
+                .chart_priority = 70017,
+                .chart_dimlength = 1,
+                .chart_dimension = { "nominal_current" },
+        },
+        {
+                .name = "output.frequency",
+                .chart_id = "output_frequency",
+                .chart_title = "UPS Output frequency",
+                .chart_units = "Hz",
+                .chart_family = "output",
+                .chart_context = "upsd.ups_output_frequency",
+                .chart_type = "line",
+                .chart_priority = 70018,
+                .chart_dimlength = 1,
+                .chart_dimension = { "frequency" },
+        },
+        {
+                .name = "output.frequency.nominal",
+                .chart_id = "output_frequency_nominal",
+                .chart_title = "UPS Output frequency nominal",
+                .chart_units = "Hz",
+                .chart_family = "output",
+                .chart_context = "upsd.ups_output_frequency_nominal",
+                .chart_type = "line",
+                .chart_priority = 70019,
+                .chart_dimlength = 1,
+                .chart_dimension = { "nominal_frequency" },
+        },
+        { 0 },
+};
+
+char *clean_name(char *buf, size_t bufsize, const char *name)
+{
+        for (size_t i = 0; i < bufsize; i++) {
+                buf[i] = (name[i] == ' ' || name[i] == '.') ? '_': name[i];
+                if (name[i] == '\0')
+                        break;
+                if (i+1 == bufsize)
+                        buf[i] = '\0';
+        }
+        return buf;
+}
+
+void print_netdata_charts(const char *ups_name, htss_t *variables_ht)
+{
+        char buffer[64];
+
+        for (const struct ups_var_chart *chart = ups_var_charts; chart->name; chart++) {
+                // Skip metrics that are not available from the UPS.
+                if (!htss_has(variables_ht, chart->name))
+                        continue;
+
+                // TODO: do not hardcode update_every and plugin name
+                // CHART type.id name title units [family [context [charttype [priority [update_every [options [plugin [module]]]]]]]]
+                printf("CHART '%s.%s' '' '%s' '%s' '%s' '%s' '%s' '%u' '%u' '' '%s'\n",
+                       clean_name(buffer, sizeof(buffer), ups_name), // type
+                       chart->chart_id,       // id
+                       chart->chart_title,    // title
+                       chart->chart_units,    // units
+                       chart->chart_family,   // family
+                       chart->chart_context,  // context
+                       chart->chart_type,     // charttype
+                       chart->chart_priority, // priority
+                       1,                     // update_every
+                       "upsd");               // plugin
+
+                if (htss_has(variables_ht, "battery.type"))
+                        printf("CLABEL 'battery_type' '%s' '%u'\n", htss_get(variables_ht, "battery.type"), NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
+                if (htss_has(variables_ht, "device.model"))
+                        printf("CLABEL 'device_model' '%s' '%u'\n", htss_get(variables_ht, "device.model"), NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
+                if (htss_has(variables_ht, "device.serial"))
+                        printf("CLABEL 'device_serial' '%s' '%u'\n", htss_get(variables_ht, "device.serial"), NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
+                if (htss_has(variables_ht, "device.mfr"))
+                        printf("CLABEL 'device_manufacturer' '%s' '%u'\n", htss_get(variables_ht, "device.mfr"), NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
+                if (htss_has(variables_ht, "device.type"))
+                        printf("CLABEL 'device_type' '%s' '%u'\n", htss_get(variables_ht, "device.type"), NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
+                printf("CLABEL '%s' '%s' '%u'\n"
+                       "CLABEL '%s' '%s' '%u'\n"
+                       "CLABEL_COMMIT\n",
+                       "ups_name", ups_name, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO,
+                       "_collect_job", "local", NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
+
+                for (size_t i = 0; i < chart->chart_dimlength; i++)
+                        printf("DIMENSION '%s'\n", chart->chart_dimension[i]);
+        }
+}
 
 // This function parses the 'ups.status' variable and emits the Netdata metrics
 // for each status, printing 1 for each set status and 0 otherwise.
@@ -198,8 +515,9 @@ int main(int argc, char *argv[])
         const char *listups_query[LISTUPS_NUMQ] = { "UPS" };
         const char *listvar_query[LISTVAR_NUMQ] = { "VAR" };
         UPSCONN_t listups_conn, listvar_conn;
+        htss_t variables_ht;
         htss_t var_chart_ht;
-        htss_t clean_ups_names_ht;
+        char buffer[64];
 
         // If we fail to initialize libupsclient or connect to a local
         // UPS, then there's nothing more to be done; Netdata should disable
@@ -207,7 +525,7 @@ int main(int argc, char *argv[])
         if (-1 == upscli_init(0, NULL, NULL, NULL)) {
                 fputs("error: failed to initialize libupsclient", stderr);
                 puts("DISABLE");
-                exit(NETDATA_UPSD_EXIT_AND_DISABLE);
+                exit(NETDATA_PLUGIN_EXIT_AND_DISABLE);
         }
 
         // TODO: get address/port from configuration file
@@ -216,11 +534,11 @@ int main(int argc, char *argv[])
                 upscli_cleanup();
                 fputs("error: failed to connect to upsd at 127.0.0.1:3493", stderr);
                 puts("DISABLE");
-                exit(NETDATA_UPSD_EXIT_AND_DISABLE);
+                exit(NETDATA_PLUGIN_EXIT_AND_DISABLE);
         }
 
+        htss_init(&variables_ht, strhash, strkeyeq);
         htss_init(&var_chart_ht, strhash, strkeyeq);
-        htss_init(&clean_ups_names_ht, strhash, strkeyeq);
 
         // Populate a hash table with the NUT variable names and their corresponding chart IDs.
         htss_set(&var_chart_ht, "battery.charge", "battery_charge_percentage");
@@ -258,10 +576,7 @@ int main(int argc, char *argv[])
                  if (!strcmp("END", listups_answer[0][0]))
                          continue;
 
-                // TODO: clean up the UPS name by replacing spaces and periods with underscores.
-                //const char *ups_name = htss_get(&clean_ups_names_ht, listups_answer[0][LISTUPS_NUMQ]);
-                const char *ups_name = listups_answer[0][LISTUPS_NUMQ];
-
+                char *ups_name = listups_answer[0][LISTUPS_NUMQ];
 
                 // Query upsd for UPS properties with the 'LIST VAR <ups>' command.
                 listvar_query[1] = ups_name;
@@ -279,23 +594,9 @@ int main(int argc, char *argv[])
                         // need it, so let's skip processing on that item.
                         if (numa < 4) continue;
 
-                        const char *var_name = listvar_answer[0][LISTVAR_ANS_VAR_NAME];
-                        const char *var_value = listvar_answer[0][LISTVAR_ANS_VAR_VALUE];
-
-                        // The 'ups.status' variable is a special case, because its chart has more
-                        // than one dimension. So, we can't simply print one data point.
-                        if (!strcmp(var_name, "ups.status")) {
-                                print_ups_status_metrics(ups_name, var_value);
-                                continue;
-                        }
-
-                        if (htss_has(&var_chart_ht, var_name)) {
-                                printf("BEGIN %s.%s\n"
-                                       "SET ups_%s_%s = %s\n"
-                                       "END\n",
-                                       ups_name, htss_get(&var_chart_ht, var_name),
-                                       ups_name, var_name, var_value);
-                        }
+                        char *variable_name = strdup(listvar_answer[0][LISTVAR_ANS_VAR_NAME]);
+                        char *variable_value = strdup(listvar_answer[0][LISTVAR_ANS_VAR_VALUE]);
+                        htss_set(&variables_ht, variable_name, variable_value);
                 } while (1 == listvar_status);
 
                 if (-1 == listvar_status) {
@@ -304,6 +605,7 @@ int main(int argc, char *argv[])
                         );
                 }
 
+                print_netdata_charts(ups_name, &variables_ht);
         } while (1 == listups_status);
 
         if (-1 == listups_status) {
@@ -312,12 +614,77 @@ int main(int argc, char *argv[])
                 );
         }
 
-        // Flush the data out of the stream buffer to ensure netdata gets it immediately.
-        // https://learn.netdata.cloud/docs/developer-and-contributor-corner/external-plugins#the-output-of-the-plugin
-        fflush(stdout);
+        for (int i = 0; i < 1; i++) {
+                // Query upsd for UPSes with the 'LIST UPS' command.
+                if (-1 == upscli_list_start(&listups_conn, LISTUPS_NUMQ, listups_query)) {
+                        fprintf(stderr, "error: failed to 'LIST UPS': libupsclient: %s\n",
+                            upscli_strerror(&listups_conn)
+                        );
+                }
 
-        htss_uninit(&var_chart_ht);
-        htss_uninit(&clean_ups_names_ht);
+                do {
+                        listups_status = upscli_list_next(&listups_conn, LISTUPS_NUMQ, listups_query, &numa, (char***)&listups_answer);
+
+                        if (!strcmp("END", listups_answer[0][0])) continue;
+
+                        const char *ups_name = listups_answer[0][LISTUPS_NUMQ];
+                        const char *clean_ups_name = clean_name(buffer, sizeof(buffer), ups_name);
+
+                        // Query upsd for UPS properties with the 'LIST VAR <ups>' command.
+                        listvar_query[1] = ups_name;
+                        if (-1 == upscli_list_start(&listvar_conn, 2, listvar_query)) {
+                                fprintf(stderr, "error: failed to 'LIST VAR %s': libupsclient: %s\n",
+                                    ups_name, upscli_strerror(&listvar_conn)
+                                );
+                        }
+
+                        do {
+                                listvar_status = upscli_list_next(&listvar_conn, LISTVAR_NUMQ, listvar_query, &numa, (char***)&listvar_answer);
+
+                                if (numa < 4) continue;
+
+                                const char *var_name = listvar_answer[0][LISTVAR_ANS_VAR_NAME];
+                                const char *var_value = listvar_answer[0][LISTVAR_ANS_VAR_VALUE];
+
+                                // The 'ups.status' variable is a special case, because its chart has more
+                                // than one dimension. So, we can't simply print one data point.
+                                if (!strcmp(var_name, "ups.status")) {
+                                        print_ups_status_metrics(clean_ups_name, var_value);
+                                        continue;
+                                }
+
+                                if (htss_has(&var_chart_ht, var_name)) {
+                                        printf("BEGIN %s.%s\n"
+                                               "SET ups_%s_%s = %s\n"
+                                               "END\n",
+                                               clean_ups_name, htss_get(&var_chart_ht, var_name),
+                                               clean_ups_name, var_name, var_value);
+                                }
+                        } while (1 == listvar_status);
+
+                        if (-1 == listvar_status) {
+                                fprintf(stderr, "error: failed to finish 'LIST VAR %s': libupsclient: %s\n",
+                                    ups_name, upscli_strerror(&listvar_conn)
+                                );
+                        }
+
+                } while (1 == listups_status);
+
+                if (-1 == listups_status) {
+                        fprintf(stderr, "error: failed to finish 'LIST UPS': libupsclient: %s\n",
+                            upscli_strerror(&listups_conn)
+                        );
+                }
+
+                // Flush the data out of the stream buffer to ensure netdata gets it immediately.
+                // https://learn.netdata.cloud/docs/developer-and-contributor-corner/external-plugins#the-output-of-the-plugin
+                fflush(stdout);
+
+                // TODO: get the sleep duration from argv[1]
+                sleep(1);
+        }
+
+        htss_free(&var_chart_ht);
 
         upscli_disconnect(&listups_conn);
         upscli_disconnect(&listvar_conn);
