@@ -30,12 +30,6 @@
 // Since "LIST" is implied, there are two arguments: "VAR" and the UPS identifier.
 #define LISTVAR_NUMQ 2
 
-// These macros contain the indices of the "LIST VAR <UPS>" query's answer.
-#define LISTVAR_ANS_VAR       0 // "VAR"
-#define LISTVAR_ANS_UPS_NAME  1 // <UPS>
-#define LISTVAR_ANS_VAR_NAME  2 // <variable>
-#define LISTVAR_ANS_VAR_VALUE 3 // <value>
-
 // https://networkupstools.org/docs/developer-guide.chunked/new-drivers.html#_status_data
 struct nut_ups_status {
     unsigned int OL      : 1; // On line
@@ -599,8 +593,10 @@ int main(int argc, char *argv[])
             if (numa < 4) continue;
 
             // TODO: don't forget to free these strings
-            char *variable_name = strdup(listvar_answer[0][LISTVAR_ANS_VAR_NAME]);
-            char *variable_value = strdup(listvar_answer[0][LISTVAR_ANS_VAR_VALUE]);
+            // The output of upscli_list_next() will be something like:
+            //   { { [0] = "VAR", [1] = <UPS name>, [2] = <variable name>, [3] = <variable value> } }
+            char *variable_name = strdup(listvar_answer[0][2]);
+            char *variable_value = strdup(listvar_answer[0][3]);
             htss_set(&variables_ht, variable_name, variable_value);
         }
 
@@ -629,8 +625,10 @@ int main(int argc, char *argv[])
 
                 if (numa < 4) continue;
 
-                const char *var_name = listvar_answer[0][LISTVAR_ANS_VAR_NAME];
-                const char *var_value = listvar_answer[0][LISTVAR_ANS_VAR_VALUE];
+                // The output of upscli_list_next() will be something like:
+                //   { { [0] = "VAR", [1] = <UPS name>, [2] = <variable name>, [3] = <variable value> } }
+                const char *var_name = listvar_answer[0][2];
+                const char *var_value = listvar_answer[0][3];
 
                 // The 'ups.status' variable is a special case, because its chart has more
                 // than one dimension. So, we can't simply print one data point.
