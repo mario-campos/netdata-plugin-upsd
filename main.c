@@ -468,7 +468,8 @@ static inline void print_ups_status_metrics(const char *ups_name, const char *va
                 status.OVER = 1;
                 break;
             default:
-                /* fallthrough */
+                status.OTHER = 1;
+                break;
             }
         default:
             status.OTHER = 1;
