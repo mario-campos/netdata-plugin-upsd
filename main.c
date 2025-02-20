@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -332,6 +333,9 @@ const struct ups_var_chart ups_var_charts[] = {
 
 char *clean_name(char *buf, size_t bufsize, const char *name)
 {
+    assert(buf);
+    assert(name);
+
     for (size_t i = 0; i < bufsize; i++) {
         buf[i] = (name[i] == ' ' || name[i] == '.') ? '_': name[i];
         if (name[i] == '\0')
@@ -344,6 +348,9 @@ char *clean_name(char *buf, size_t bufsize, const char *name)
 
 void print_netdata_charts(const char *ups_name, htss_t *variables_ht)
 {
+    assert(ups_name);
+    assert(variables_ht);
+
     char buffer[64];
 
     for (const struct ups_var_chart *chart = ups_var_charts; chart->name; chart++) {
@@ -390,6 +397,9 @@ void print_netdata_charts(const char *ups_name, htss_t *variables_ht)
 // for each status, printing 1 for each set status and 0 otherwise.
 static inline void print_ups_status_metrics(const char *ups_name, const char *value)
 {
+    assert(ups_name);
+    assert(value);
+
     struct nut_ups_status status = { 0 };
 
     for (const char *c = value; *c; c++) {
@@ -511,7 +521,7 @@ int main(int argc, char *argv[])
 {
     size_t numa;
     char **listups_answer[1], **listvar_answer[1];
-    int listups_status, listvar_status;
+    int rc;
     const char *listups_query[LISTUPS_NUMQ] = { "UPS" };
     const char *listvar_query[LISTVAR_NUMQ] = { "VAR" };
     UPSCONN_t listups_conn, listvar_conn;
@@ -560,15 +570,12 @@ int main(int argc, char *argv[])
     htss_set(&var_chart_ht, "ups.load", "ups_load_percentage");
     htss_set(&var_chart_ht, "ups.temperature", "temperature");
 
-    // Query upsd for UPSes with the 'LIST UPS' command.
-    if (-1 == upscli_list_start(&listups_conn, LISTUPS_NUMQ, listups_query)) {
-        fprintf(stderr, "error: failed to 'LIST UPS': libupsclient: %s\n",
-            upscli_strerror(&listups_conn)
-        );
-    }
+    rc = upscli_list_start(&listups_conn, LISTUPS_NUMQ, listups_query);
+    assert(-1 != rc);
 
-    do {
-        listups_status = upscli_list_next(&listups_conn, LISTUPS_NUMQ, listups_query, &numa, (char***)&listups_answer);
+    // Query upsd for UPSes with the 'LIST UPS' command.
+    while ((rc = upscli_list_next(&listups_conn, LISTUPS_NUMQ, listups_query, &numa, (char***)&listups_answer))) {
+        assert(-1 != rc);
 
         // Unfortunately, upscli_list_next() will emit the list delimiter
         // "END LIST UPS" as its last iteration before returning 0. We don't
@@ -580,50 +587,32 @@ int main(int argc, char *argv[])
 
         // Query upsd for UPS properties with the 'LIST VAR <ups>' command.
         listvar_query[1] = ups_name;
-        if (-1 == upscli_list_start(&listvar_conn, 2, listvar_query)) {
-            fprintf(stderr, "error: failed to 'LIST VAR %s': libupsclient: %s\n",
-                ups_name, upscli_strerror(&listvar_conn)
-            );
-        }
+        rc = upscli_list_start(&listvar_conn, 2, listvar_query);
+        assert(-1 != rc);
 
-        do {
-            listvar_status = upscli_list_next(&listvar_conn, LISTVAR_NUMQ, listvar_query, &numa, (char***)&listvar_answer);
+        while ((rc = upscli_list_next(&listvar_conn, LISTVAR_NUMQ, listvar_query, &numa, (char***)&listvar_answer))) {
+            assert(-1 != rc);
 
             // Unfortunately, upscli_list_next() will emit the list delimiter
             // "END LIST VAR" as its last iteration before returning 0. We don't
             // need it, so let's skip processing on that item.
             if (numa < 4) continue;
 
+            // TODO: don't forget to free these strings
             char *variable_name = strdup(listvar_answer[0][LISTVAR_ANS_VAR_NAME]);
             char *variable_value = strdup(listvar_answer[0][LISTVAR_ANS_VAR_VALUE]);
             htss_set(&variables_ht, variable_name, variable_value);
-        } while (1 == listvar_status);
-
-        if (-1 == listvar_status) {
-            fprintf(stderr, "error: failed to finish 'LIST VAR %s': libupsclient: %s\n",
-                ups_name, upscli_strerror(&listvar_conn)
-            );
         }
 
         print_netdata_charts(ups_name, &variables_ht);
-    } while (1 == listups_status);
-
-    if (-1 == listups_status) {
-        fprintf(stderr, "error: failed to finish 'LIST UPS': libupsclient: %s\n",
-            upscli_strerror(&listups_conn)
-        );
     }
 
     for (int i = 0; i < 1; i++) {
-        // Query upsd for UPSes with the 'LIST UPS' command.
-        if (-1 == upscli_list_start(&listups_conn, LISTUPS_NUMQ, listups_query)) {
-            fprintf(stderr, "error: failed to 'LIST UPS': libupsclient: %s\n",
-                upscli_strerror(&listups_conn)
-            );
-        }
+        rc = upscli_list_start(&listups_conn, LISTUPS_NUMQ, listups_query);
+        assert(-1 != rc);
 
-        do {
-            listups_status = upscli_list_next(&listups_conn, LISTUPS_NUMQ, listups_query, &numa, (char***)&listups_answer);
+        while ((rc = upscli_list_next(&listups_conn, LISTUPS_NUMQ, listups_query, &numa, (char***)&listups_answer))) {
+            assert(-1 != rc);
 
             if (!strcmp("END", listups_answer[0][0])) continue;
 
@@ -632,14 +621,11 @@ int main(int argc, char *argv[])
 
             // Query upsd for UPS properties with the 'LIST VAR <ups>' command.
             listvar_query[1] = ups_name;
-            if (-1 == upscli_list_start(&listvar_conn, 2, listvar_query)) {
-                fprintf(stderr, "error: failed to 'LIST VAR %s': libupsclient: %s\n",
-                    ups_name, upscli_strerror(&listvar_conn)
-                );
-            }
+            rc = upscli_list_start(&listvar_conn, 2, listvar_query);
+            assert(-1 != rc);
 
-            do {
-                listvar_status = upscli_list_next(&listvar_conn, LISTVAR_NUMQ, listvar_query, &numa, (char***)&listvar_answer);
+            while ((rc = upscli_list_next(&listvar_conn, LISTVAR_NUMQ, listvar_query, &numa, (char***)&listvar_answer))) {
+                assert(-1 != rc);
 
                 if (numa < 4) continue;
 
@@ -660,20 +646,8 @@ int main(int argc, char *argv[])
                            clean_ups_name, htss_get(&var_chart_ht, var_name),
                            clean_ups_name, var_name, var_value);
                 }
-            } while (1 == listvar_status);
-
-            if (-1 == listvar_status) {
-                fprintf(stderr, "error: failed to finish 'LIST VAR %s': libupsclient: %s\n",
-                    ups_name, upscli_strerror(&listvar_conn)
-                );
             }
 
-        } while (1 == listups_status);
-
-        if (-1 == listups_status) {
-            fprintf(stderr, "error: failed to finish 'LIST UPS': libupsclient: %s\n",
-                upscli_strerror(&listups_conn)
-            );
         }
 
         // Flush the data out of the stream buffer to ensure netdata gets it immediately.
@@ -684,7 +658,7 @@ int main(int argc, char *argv[])
         sleep(1);
     }
 
-    htss_free(&var_chart_ht);
+    htss_uninit(&var_chart_ht);
 
     upscli_disconnect(&listups_conn);
     upscli_disconnect(&listvar_conn);
