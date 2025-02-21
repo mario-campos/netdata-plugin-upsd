@@ -22,8 +22,8 @@
 #define NETDATA_PLUGIN_CLABEL_SOURCE_K8     4
 #define NETDATA_PLUGIN_CLABEL_SOURCE_AGENT  8
 
-// This macro defines the size of buffers used for all sorts of things.
 #define BUFLEN 64
+#define LENGTHOF(arr) (sizeof(arr)/sizeof(arr[0]))
 
 // https://networkupstools.org/docs/developer-guide.chunked/new-drivers.html#_status_data
 struct nut_ups_status {
@@ -345,7 +345,7 @@ bool get_nut_var(UPSCONN_t *conn, const char *ups_name, const char *var_name, ch
     char **answer[1];
     const char *query[] = { "VAR", ups_name, var_name };
     
-    if (-1 == upscli_get(conn, sizeof(query)/sizeof(char*), query, &numa, (char***)answer)) {
+    if (-1 == upscli_get(conn, LENGTHOF(query), query, &numa, (char***)answer)) {
         assert(upscli_upserror(conn) == UPSCLI_ERR_VARNOTSUPP);
         return false;
     }
@@ -488,9 +488,9 @@ int main(int argc, char *argv[])
 {
     int rc;
     size_t numa;
-    char **listups_answer[1];
-    const char *listups_query[1] = { "UPS" };
-    UPSCONN_t listups_conn, listvar_conn;
+    char **answer[1];
+    const char *query[1] = { "UPS" };
+    UPSCONN_t ups1, ups2;
     char buf[BUFLEN];
     char output[BUFSIZ];
 
@@ -504,8 +504,8 @@ int main(int argc, char *argv[])
     }
 
     // TODO: get address/port from configuration file
-    if ((-1 == upscli_connect(&listups_conn, "127.0.0.1", 3493, 0)) ||
-        (-1 == upscli_connect(&listvar_conn, "127.0.0.1", 3493, 0))) {
+    if ((-1 == upscli_connect(&ups1, "127.0.0.1", 3493, 0)) ||
+        (-1 == upscli_connect(&ups2, "127.0.0.1", 3493, 0))) {
         upscli_cleanup();
         fputs("error: failed to connect to upsd at 127.0.0.1:3493", stderr);
         puts("DISABLE");
@@ -516,24 +516,24 @@ int main(int argc, char *argv[])
     setvbuf(stdout, output, _IOFBF, sizeof(output));
 
     // Query upsd for UPSes with the 'LIST UPS' command.
-    rc = upscli_list_start(&listups_conn, sizeof(listups_query)/sizeof(char*), listups_query);
+    rc = upscli_list_start(&ups1, LENGTHOF(query), query);
     assert(-1 != rc);
 
-    while ((rc = upscli_list_next(&listups_conn, sizeof(listups_query)/sizeof(char*), listups_query, &numa, (char***)&listups_answer))) {
+    while ((rc = upscli_list_next(&ups1, LENGTHOF(query), query, &numa, (char***)&answer))) {
         assert(-1 != rc);
 
         // Unfortunately, upscli_list_next() will emit the list delimiter
         // "END LIST UPS" as its last iteration before returning 0. We don't
         // need it, so let's skip processing on that item.
-        if (!strcmp("END", listups_answer[0][0])) continue;
+        if (!strcmp("END", answer[0][0])) continue;
 
         // The output of upscli_list_next() will be something like:
         //  { { [0] = "UPS", [1] = <UPS name>, [2] = <UPS description> } }
-        const char *ups_name = listups_answer[0][1];
+        const char *ups_name = answer[0][1];
 
         for (const struct nd_chart *chart = nd_charts; chart->nut_variable; chart++) {
             // Skip metrics that are not available from the UPS.
-            if (!get_nut_var(&listvar_conn, ups_name, chart->nut_variable, 0, 0))
+            if (!get_nut_var(&ups2, ups_name, chart->nut_variable, 0, 0))
                 continue;
 
             // TODO: do not hardcode update_every
@@ -551,15 +551,15 @@ int main(int argc, char *argv[])
                    "",                    // options
                    NETDATA_PLUGIN_NAME);  // plugin
 
-            if (get_nut_var(&listvar_conn, ups_name, "battery.type", buf, sizeof(buf)))
+            if (get_nut_var(&ups2, ups_name, "battery.type", buf, sizeof(buf)))
                 printf("CLABEL 'battery_type' '%s' '%u'\n", buf, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
-            if (get_nut_var(&listvar_conn, ups_name, "device.model", buf, sizeof(buf)))
+            if (get_nut_var(&ups2, ups_name, "device.model", buf, sizeof(buf)))
                 printf("CLABEL 'device_model' '%s' '%u'\n", buf, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
-            if (get_nut_var(&listvar_conn, ups_name, "device.serial", buf, sizeof(buf)))
+            if (get_nut_var(&ups2, ups_name, "device.serial", buf, sizeof(buf)))
                 printf("CLABEL 'device_serial' '%s' '%u'\n", buf, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
-            if (get_nut_var(&listvar_conn, ups_name, "device.mfr", buf, sizeof(buf)))
+            if (get_nut_var(&ups2, ups_name, "device.mfr", buf, sizeof(buf)))
                 printf("CLABEL 'device_manufacturer' '%s' '%u'\n", buf, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
-            if (get_nut_var(&listvar_conn, ups_name, "device.type", buf, sizeof(buf)))
+            if (get_nut_var(&ups2, ups_name, "device.type", buf, sizeof(buf)))
                 printf("CLABEL 'device_type' '%s' '%u'\n", buf, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
 
             printf("CLABEL 'ups_name' '%s' '%u'\n", ups_name, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
@@ -572,22 +572,22 @@ int main(int argc, char *argv[])
     }
 
     for (int i = 0; i < 1; i++) {
-        rc = upscli_list_start(&listups_conn, sizeof(listups_query)/sizeof(char*), listups_query);
+        rc = upscli_list_start(&ups1, LENGTHOF(query), query);
         assert(-1 != rc);
 
-        while ((rc = upscli_list_next(&listups_conn, sizeof(listups_query)/sizeof(char*), listups_query, &numa, (char***)&listups_answer))) {
+        while ((rc = upscli_list_next(&ups1, LENGTHOF(query), query, &numa, (char***)&answer))) {
             assert(-1 != rc);
 
-            if (!strcmp("END", listups_answer[0][0])) continue;
+            if (!strcmp("END", answer[0][0])) continue;
 
-            const char *ups_name = listups_answer[0][1];
+            const char *ups_name = answer[0][1];
             const char *clean_ups_name = clean_name(buf, sizeof(buf), ups_name);
 
             for (const struct nd_chart *chart = nd_charts; chart->nut_variable; chart++) {
                 char nut_value[BUFLEN];
 
                 // Skip metrics that are not available from the UPS.
-                if (!get_nut_var(&listvar_conn, ups_name, chart->nut_variable, nut_value, sizeof(nut_value)))
+                if (!get_nut_var(&ups2, ups_name, chart->nut_variable, nut_value, sizeof(nut_value)))
                     continue;
 
                 // The 'ups.status' variable is a special case, because its chart has more
@@ -610,7 +610,7 @@ int main(int argc, char *argv[])
         fflush(stdout);
     }
 
-    upscli_disconnect(&listups_conn);
-    upscli_disconnect(&listvar_conn);
+    upscli_disconnect(&ups1);
+    upscli_disconnect(&ups2);
     upscli_cleanup();
 }
