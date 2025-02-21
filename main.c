@@ -7,9 +7,6 @@
 #include <time.h>
 #include <unistd.h>
 
-#include <genht/htss.h>
-#include <genht/hash.h>
-
 #include <upsclient.h>
 
 // https://learn.netdata.cloud/docs/developer-and-contributor-corner/external-plugins#operation
@@ -29,6 +26,9 @@
 // This macro defines the number of arguments in the "LIST VAR <UPS>" query.
 // Since "LIST" is implied, there are two arguments: "VAR" and the UPS identifier.
 #define LISTVAR_NUMQ 2
+
+// This macro defines the size of buffers used for all sorts of things.
+#define BUFLEN 64
 
 // https://networkupstools.org/docs/developer-guide.chunked/new-drivers.html#_status_data
 struct nut_ups_status {
@@ -340,51 +340,28 @@ char *clean_name(char *buf, size_t bufsize, const char *name)
     return buf;
 }
 
-void print_netdata_charts(const char *ups_name, htss_t *variables_ht)
+bool get_upsd_var(UPSCONN_t *conn, const char *ups_name, const char *var_name, char *buf, size_t bufsize)
 {
+    assert(conn);
     assert(ups_name);
-    assert(variables_ht);
+    assert(var_name);
 
-    char buffer[64];
-
-    for (const struct ups_var_chart *chart = ups_var_charts; chart->name; chart++) {
-        // Skip metrics that are not available from the UPS.
-        if (!htss_has(variables_ht, chart->name))
-            continue;
-
-        // TODO: do not hardcode update_every and plugin name
-        // CHART type.id name title units [family [context [charttype [priority [update_every [options [plugin [module]]]]]]]]
-        printf("CHART 'upsd_%s.%s' '' '%s' '%s' '%s' '%s' '%s' '%u' '%u' '' '%s'\n",
-               clean_name(buffer, sizeof(buffer), ups_name), // type
-               chart->chart_id,       // id
-               chart->chart_title,    // title
-               chart->chart_units,    // units
-               chart->chart_family,   // family
-               chart->chart_context,  // context
-               chart->chart_type,     // charttype
-               chart->chart_priority, // priority
-               1,                     // update_every
-               "upsd");               // plugin
-
-        if (htss_has(variables_ht, "battery.type"))
-            printf("CLABEL 'battery_type' '%s' '%u'\n", htss_get(variables_ht, "battery.type"), NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
-        if (htss_has(variables_ht, "device.model"))
-            printf("CLABEL 'device_model' '%s' '%u'\n", htss_get(variables_ht, "device.model"), NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
-        if (htss_has(variables_ht, "device.serial"))
-            printf("CLABEL 'device_serial' '%s' '%u'\n", htss_get(variables_ht, "device.serial"), NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
-        if (htss_has(variables_ht, "device.mfr"))
-            printf("CLABEL 'device_manufacturer' '%s' '%u'\n", htss_get(variables_ht, "device.mfr"), NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
-        if (htss_has(variables_ht, "device.type"))
-            printf("CLABEL 'device_type' '%s' '%u'\n", htss_get(variables_ht, "device.type"), NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
-        printf("CLABEL '%s' '%s' '%u'\n"
-               "CLABEL '%s' '%s' '%u'\n"
-               "CLABEL_COMMIT\n",
-               "ups_name", ups_name, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO,
-               "_collect_plugin", "upsd", NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
-
-        for (size_t i = 0; i < chart->chart_dimlength; i++)
-            printf("DIMENSION '%s'\n", chart->chart_dimension[i]);
+    size_t numa;
+    char **answer[1];
+    const char *query[] = { "VAR", ups_name, var_name };
+    
+    if (-1 == upscli_get(conn, sizeof(query)/sizeof(char*), query, &numa, (char***)answer)) {
+        assert(upscli_upserror(conn) == UPSCLI_ERR_VARNOTSUPP);
+        return false;
     }
+
+    if (buf) {
+        // The output of upscli_get() will be something like:
+        //   { { [0] = "VAR", [1] = <UPS name>, [2] = <variable name>, [3] = <variable value> } }
+        snprintf(buf, bufsize, "%s", answer[0][3]);
+    }
+
+    return true;
 }
 
 // This function parses the 'ups.status' variable and emits the Netdata metrics
@@ -520,8 +497,7 @@ int main(int argc, char *argv[])
     const char *listups_query[LISTUPS_NUMQ] = { "UPS" };
     const char *listvar_query[LISTVAR_NUMQ] = { "VAR" };
     UPSCONN_t listups_conn, listvar_conn;
-    htss_t variables_ht;
-    char buffer[64];
+    char buf[BUFLEN];
 
     // If we fail to initialize libupsclient or connect to a local
     // UPS, then there's nothing more to be done; Netdata should disable
@@ -541,8 +517,6 @@ int main(int argc, char *argv[])
         exit(NETDATA_PLUGIN_EXIT_AND_DISABLE);
     }
 
-    htss_init(&variables_ht, strhash, strkeyeq);
-
     rc = upscli_list_start(&listups_conn, LISTUPS_NUMQ, listups_query);
     assert(-1 != rc);
 
@@ -553,33 +527,51 @@ int main(int argc, char *argv[])
         // Unfortunately, upscli_list_next() will emit the list delimiter
         // "END LIST UPS" as its last iteration before returning 0. We don't
         // need it, so let's skip processing on that item.
-         if (!strcmp("END", listups_answer[0][0]))
-             continue;
+        if (!strcmp("END", listups_answer[0][0])) continue;
 
-        char *ups_name = listups_answer[0][LISTUPS_NUMQ];
+        // The output of upscli_list_next() will be something like:
+        //  { { [0] = "UPS", [1] = <UPS name>, [2] = <UPS description> } }
+        const char *ups_name = listups_answer[0][1];
 
-        // Query upsd for UPS properties with the 'LIST VAR <ups>' command.
-        listvar_query[1] = ups_name;
-        rc = upscli_list_start(&listvar_conn, 2, listvar_query);
-        assert(-1 != rc);
+        for (const struct ups_var_chart *chart = ups_var_charts; chart->name; chart++) {
+            // Skip metrics that are not available from the UPS.
+            if (!get_upsd_var(&listvar_conn, ups_name, chart->name, 0, 0))
+                continue;
 
-        while ((rc = upscli_list_next(&listvar_conn, LISTVAR_NUMQ, listvar_query, &numa, (char***)&listvar_answer))) {
-            assert(-1 != rc);
+            // TODO: do not hardcode update_every and plugin name
+            // CHART type.id name title units [family [context [charttype [priority [update_every [options [plugin [module]]]]]]]]
+            printf("CHART 'upsd_%s.%s' '%s' '%s' '%s' '%s' '%s' '%s' '%u' '%u' '%s' '%s'\n",
+                   clean_name(buf, sizeof(buf), ups_name), chart->chart_id, // type.id
+                   "",                    // name
+                   chart->chart_title,    // title
+                   chart->chart_units,    // units
+                   chart->chart_family,   // family
+                   chart->chart_context,  // context
+                   chart->chart_type,     // charttype
+                   chart->chart_priority, // priority
+                   1,                     // update_every
+                   "",                    // options
+                   "upsd");               // plugin
 
-            // Unfortunately, upscli_list_next() will emit the list delimiter
-            // "END LIST VAR" as its last iteration before returning 0. We don't
-            // need it, so let's skip processing on that item.
-            if (numa < 4) continue;
+            if (get_upsd_var(&listvar_conn, ups_name, "battery.type", buf, sizeof(buf)))
+                printf("CLABEL 'battery_type' '%s' '%u'\n", buf, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
+            if (get_upsd_var(&listvar_conn, ups_name, "device.model", buf, sizeof(buf)))
+                printf("CLABEL 'device_model' '%s' '%u'\n", buf, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
+            if (get_upsd_var(&listvar_conn, ups_name, "device.serial", buf, sizeof(buf)))
+                printf("CLABEL 'device_serial' '%s' '%u'\n", buf, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
+            if (get_upsd_var(&listvar_conn, ups_name, "device.mfr", buf, sizeof(buf)))
+                printf("CLABEL 'device_manufacturer' '%s' '%u'\n", buf, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
+            if (get_upsd_var(&listvar_conn, ups_name, "device.type", buf, sizeof(buf)))
+                printf("CLABEL 'device_type' '%s' '%u'\n", buf, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
 
-            // TODO: don't forget to free these strings
-            // The output of upscli_list_next() will be something like:
-            //   { { [0] = "VAR", [1] = <UPS name>, [2] = <variable name>, [3] = <variable value> } }
-            char *variable_name = strdup(listvar_answer[0][2]);
-            char *variable_value = strdup(listvar_answer[0][3]);
-            htss_set(&variables_ht, variable_name, variable_value);
+            printf("CLABEL 'ups_name' '%s' '%u'\n", ups_name, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
+            // TODO: do not hardcode the plugin name
+            printf("CLABEL '_collect_plugin' '%s' '%u'\n", "upsd", NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
+            puts("CLABEL_COMMIT");
+
+            for (size_t i = 0; i < chart->chart_dimlength; i++)
+                printf("DIMENSION '%s'\n", chart->chart_dimension[i]);
         }
-
-        print_netdata_charts(ups_name, &variables_ht);
     }
 
     for (int i = 0; i < 1; i++) {
@@ -592,7 +584,7 @@ int main(int argc, char *argv[])
             if (!strcmp("END", listups_answer[0][0])) continue;
 
             const char *ups_name = listups_answer[0][LISTUPS_NUMQ];
-            const char *clean_ups_name = clean_name(buffer, sizeof(buffer), ups_name);
+            const char *clean_ups_name = clean_name(buf, sizeof(buf), ups_name);
 
             // Query upsd for UPS properties with the 'LIST VAR <ups>' command.
             listvar_query[1] = ups_name;
@@ -632,9 +624,6 @@ int main(int argc, char *argv[])
         // Flush the data out of the stream buffer to ensure netdata gets it immediately.
         // https://learn.netdata.cloud/docs/developer-and-contributor-corner/external-plugins#the-output-of-the-plugin
         fflush(stdout);
-
-        // TODO: get the sleep duration from argv[1]
-        sleep(1);
     }
 
     upscli_disconnect(&listups_conn);
