@@ -354,7 +354,7 @@ void print_netdata_charts(const char *ups_name, htss_t *variables_ht)
 
         // TODO: do not hardcode update_every and plugin name
         // CHART type.id name title units [family [context [charttype [priority [update_every [options [plugin [module]]]]]]]]
-        printf("CHART '%s.%s' '' '%s' '%s' '%s' '%s' '%s' '%u' '%u' '' '%s'\n",
+        printf("CHART 'upsd_%s.%s' '' '%s' '%s' '%s' '%s' '%s' '%u' '%u' '' '%s'\n",
                clean_name(buffer, sizeof(buffer), ups_name), // type
                chart->chart_id,       // id
                chart->chart_title,    // title
@@ -380,7 +380,7 @@ void print_netdata_charts(const char *ups_name, htss_t *variables_ht)
                "CLABEL '%s' '%s' '%u'\n"
                "CLABEL_COMMIT\n",
                "ups_name", ups_name, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO,
-               "_collect_job", "local", NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
+               "_collect_plugin", "upsd", NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
 
         for (size_t i = 0; i < chart->chart_dimlength; i++)
             printf("DIMENSION '%s'\n", chart->chart_dimension[i]);
