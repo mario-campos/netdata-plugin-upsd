@@ -486,11 +486,10 @@ static inline void print_ups_status_metrics(const char *ups_name, const char *va
 
 int main(int argc, char *argv[])
 {
-    size_t numa;
-    char **listups_answer[1], **listvar_answer[1];
     int rc;
+    size_t numa;
+    char **listups_answer[1];
     const char *listups_query[1] = { "UPS" };
-    const char *listvar_query[1] = { "VAR" };
     UPSCONN_t listups_conn, listvar_conn;
     char buf[BUFLEN];
     char output[BUFSIZ];
@@ -584,38 +583,25 @@ int main(int argc, char *argv[])
             const char *ups_name = listups_answer[0][1];
             const char *clean_ups_name = clean_name(buf, sizeof(buf), ups_name);
 
-            // Query upsd for UPS properties with the 'LIST VAR <ups>' command.
-            listvar_query[1] = ups_name;
-            rc = upscli_list_start(&listvar_conn, 2, listvar_query);
-            assert(-1 != rc);
+            for (const struct nd_chart *chart = nd_charts; chart->nut_variable; chart++) {
+                char nut_value[BUFLEN];
 
-            while ((rc = upscli_list_next(&listvar_conn, sizeof(listvar_query)/sizeof(char*), listvar_query, &numa, (char***)&listvar_answer))) {
-                assert(-1 != rc);
-
-                if (numa < 4) continue;
-
-                // The output of upscli_list_next() will be something like:
-                //   { { [0] = "VAR", [1] = <UPS name>, [2] = <variable name>, [3] = <variable value> } }
-                const char *var_name = listvar_answer[0][2];
-                const char *var_value = listvar_answer[0][3];
+                // Skip metrics that are not available from the UPS.
+                if (!get_nut_var(&listvar_conn, ups_name, chart->nut_variable, nut_value, sizeof(nut_value)))
+                    continue;
 
                 // The 'ups.status' variable is a special case, because its chart has more
                 // than one dimension. So, we can't simply print one data point.
-                if (!strcmp(var_name, "ups.status")) {
-                    print_ups_status_metrics(clean_ups_name, var_value);
+                if (!strcmp(chart->nut_variable, "ups.status")) {
+                    print_ups_status_metrics(clean_ups_name, nut_value);
                     continue;
                 }
 
-                for (const struct nd_chart *chart = nd_charts; chart->nut_variable; chart++) {
-                    if (!strcmp(var_name, chart->nut_variable)) {
-                        printf("BEGIN '%s_%s.%s'\n"
-                               "SET '%s' = %s\n"
-                               "END\n",
-                               NETDATA_PLUGIN_NAME, clean_ups_name, chart->chart_id,
-                               chart->chart_dimension[0], var_value);
-                        break;
-                    }
-                }
+                printf("BEGIN '%s_%s.%s'\n"
+                       "SET '%s' = %s\n"
+                       "END\n",
+                       NETDATA_PLUGIN_NAME, clean_ups_name, chart->chart_id,
+                       chart->chart_dimension[0], nut_value);
             }
         }
 
