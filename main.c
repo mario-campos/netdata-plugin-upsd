@@ -20,13 +20,6 @@
 #define NETDATA_PLUGIN_CLABEL_SOURCE_K8     4
 #define NETDATA_PLUGIN_CLABEL_SOURCE_AGENT  8
 
-// This macro defines the number of arguments in the "LIST UPS" query.
-// Since "LIST" is implied, there is only one argument: "UPS".
-#define LISTUPS_NUMQ 1
-// This macro defines the number of arguments in the "LIST VAR <UPS>" query.
-// Since "LIST" is implied, there are two arguments: "VAR" and the UPS identifier.
-#define LISTVAR_NUMQ 2
-
 // This macro defines the size of buffers used for all sorts of things.
 #define BUFLEN 64
 
@@ -494,8 +487,8 @@ int main(int argc, char *argv[])
     size_t numa;
     char **listups_answer[1], **listvar_answer[1];
     int rc;
-    const char *listups_query[LISTUPS_NUMQ] = { "UPS" };
-    const char *listvar_query[LISTVAR_NUMQ] = { "VAR" };
+    const char *listups_query[1] = { "UPS" };
+    const char *listvar_query[1] = { "VAR" };
     UPSCONN_t listups_conn, listvar_conn;
     char buf[BUFLEN];
 
@@ -517,11 +510,11 @@ int main(int argc, char *argv[])
         exit(NETDATA_PLUGIN_EXIT_AND_DISABLE);
     }
 
-    rc = upscli_list_start(&listups_conn, LISTUPS_NUMQ, listups_query);
+    rc = upscli_list_start(&listups_conn, sizeof(listups_query)/sizeof(char*), listups_query);
     assert(-1 != rc);
 
     // Query upsd for UPSes with the 'LIST UPS' command.
-    while ((rc = upscli_list_next(&listups_conn, LISTUPS_NUMQ, listups_query, &numa, (char***)&listups_answer))) {
+    while ((rc = upscli_list_next(&listups_conn, sizeof(listups_query)/sizeof(char*), listups_query, &numa, (char***)&listups_answer))) {
         assert(-1 != rc);
 
         // Unfortunately, upscli_list_next() will emit the list delimiter
@@ -575,15 +568,15 @@ int main(int argc, char *argv[])
     }
 
     for (int i = 0; i < 1; i++) {
-        rc = upscli_list_start(&listups_conn, LISTUPS_NUMQ, listups_query);
+        rc = upscli_list_start(&listups_conn, sizeof(listups_query)/sizeof(char*), listups_query);
         assert(-1 != rc);
 
-        while ((rc = upscli_list_next(&listups_conn, LISTUPS_NUMQ, listups_query, &numa, (char***)&listups_answer))) {
+        while ((rc = upscli_list_next(&listups_conn, sizeof(listups_query)/sizeof(char*), listups_query, &numa, (char***)&listups_answer))) {
             assert(-1 != rc);
 
             if (!strcmp("END", listups_answer[0][0])) continue;
 
-            const char *ups_name = listups_answer[0][LISTUPS_NUMQ];
+            const char *ups_name = listups_answer[0][1];
             const char *clean_ups_name = clean_name(buf, sizeof(buf), ups_name);
 
             // Query upsd for UPS properties with the 'LIST VAR <ups>' command.
@@ -591,7 +584,7 @@ int main(int argc, char *argv[])
             rc = upscli_list_start(&listvar_conn, 2, listvar_query);
             assert(-1 != rc);
 
-            while ((rc = upscli_list_next(&listvar_conn, LISTVAR_NUMQ, listvar_query, &numa, (char***)&listvar_answer))) {
+            while ((rc = upscli_list_next(&listvar_conn, sizeof(listvar_query)/sizeof(char*), listvar_query, &numa, (char***)&listvar_answer))) {
                 assert(-1 != rc);
 
                 if (numa < 4) continue;
