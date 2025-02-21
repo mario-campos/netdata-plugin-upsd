@@ -45,8 +45,8 @@ struct nut_ups_status {
 };
 
 // https://learn.netdata.cloud/docs/developer-and-contributor-corner/external-plugins/#chart
-struct ups_var_chart {
-    const char *name;
+struct nd_chart {
+    const char *nut_variable;
     const char *chart_id;
     const char *chart_name;
     const char *chart_title;
@@ -59,9 +59,9 @@ struct ups_var_chart {
     const char *chart_dimension[15];
 };
 
-const struct ups_var_chart ups_var_charts[] = {
+const struct nd_chart nd_charts[] = {
     {
-        .name = "ups.load",
+        .nut_variable = "ups.load",
         .chart_id = "load_percentage",
         .chart_title = "UPS load",
         .chart_units = "percentage",
@@ -74,7 +74,7 @@ const struct ups_var_chart ups_var_charts[] = {
     },
     {
         // TODO: this is not a real variable from NUT
-        .name = "ups.load_usage",
+        .nut_variable = "ups.load_usage",
         .chart_id = "load_usage",
         .chart_title = "UPS load usage (power output)",
         .chart_units = "Watts",
@@ -86,7 +86,7 @@ const struct ups_var_chart ups_var_charts[] = {
         .chart_dimension = { "load_usage" },
     },
     {
-        .name = "ups.status",
+        .nut_variable = "ups.status",
         .chart_id = "status",
         .chart_title = "UPS status",
         .chart_units = "status",
@@ -114,7 +114,7 @@ const struct ups_var_chart ups_var_charts[] = {
         },
     },
     {
-        .name = "ups.temperature",
+        .nut_variable = "ups.temperature",
         .chart_id = "temperature",
         .chart_title = "UPS temperature",
         .chart_units = "Celsius",
@@ -126,7 +126,7 @@ const struct ups_var_chart ups_var_charts[] = {
         .chart_dimension = { "temperature" },
     },
     {
-        .name = "battery.charge",
+        .nut_variable = "battery.charge",
         .chart_id = "battery_charge_percentage",
         .chart_title = "UPS Battery charge",
         .chart_units = "percentage",
@@ -138,7 +138,7 @@ const struct ups_var_chart ups_var_charts[] = {
         .chart_dimension = { "charge" },
     },
     {
-        .name = "battery.runtime",
+        .nut_variable = "battery.runtime",
         .chart_id = "battery_estimated_runtime",
         .chart_title = "UPS Battery estimated runtime",
         .chart_units = "seconds",
@@ -150,7 +150,7 @@ const struct ups_var_chart ups_var_charts[] = {
         .chart_dimension = { "runtime" },
     },
     {
-        .name = "battery.voltage",
+        .nut_variable = "battery.voltage",
         .chart_id = "battery_voltage",
         .chart_title = "UPS Battery voltage",
         .chart_units = "Volts",
@@ -162,7 +162,7 @@ const struct ups_var_chart ups_var_charts[] = {
         .chart_dimension = { "voltage" },
     },
     {
-        .name = "battery.voltage.nominal",
+        .nut_variable = "battery.voltage.nominal",
         .chart_id = "battery_voltage_nominal",
         .chart_title = "UPS Battery voltage nominal",
         .chart_units = "Volts",
@@ -174,7 +174,7 @@ const struct ups_var_chart ups_var_charts[] = {
         .chart_dimension = { "nominal_voltage" },
     },
     {
-        .name = "input.voltage",
+        .nut_variable = "input.voltage",
         .chart_id = "input_voltage",
         .chart_title = "UPS Input voltage",
         .chart_units = "Volts",
@@ -186,7 +186,7 @@ const struct ups_var_chart ups_var_charts[] = {
         .chart_dimension = { "voltage" },
     },
     {
-        .name = "input.voltage.nominal",
+        .nut_variable = "input.voltage.nominal",
         .chart_id = "input_voltage_nominal",
         .chart_title = "UPS Input voltage nominal",
         .chart_units = "Volts",
@@ -198,7 +198,7 @@ const struct ups_var_chart ups_var_charts[] = {
         .chart_dimension = { "nominal_voltage" },
     },
     {
-        .name = "input.current",
+        .nut_variable = "input.current",
         .chart_id = "input_current",
         .chart_title = "UPS Input current",
         .chart_units = "Ampere",
@@ -210,7 +210,7 @@ const struct ups_var_chart ups_var_charts[] = {
         .chart_dimension = { "current" },
     },
     {
-        .name = "input.current.nominal",
+        .nut_variable = "input.current.nominal",
         .chart_id = "input_current_nominal",
         .chart_title = "UPS Input current nominal",
         .chart_units = "Ampere",
@@ -222,7 +222,7 @@ const struct ups_var_chart ups_var_charts[] = {
         .chart_dimension = { "nominal_current" },
     },
     {
-        .name = "input.frequency",
+        .nut_variable = "input.frequency",
         .chart_id = "input_frequency",
         .chart_title = "UPS Input frequency",
         .chart_units = "Hz",
@@ -234,7 +234,7 @@ const struct ups_var_chart ups_var_charts[] = {
         .chart_dimension = { "frequency" },
     },
     {
-        .name = "input.frequency.nominal",
+        .nut_variable = "input.frequency.nominal",
         .chart_id = "input_frequency_nominal",
         .chart_title = "UPS Input frequency nominal",
         .chart_units = "Hz",
@@ -246,7 +246,7 @@ const struct ups_var_chart ups_var_charts[] = {
         .chart_dimension = { "nominal_frequency" },
     },
     {
-        .name = "output.voltage",
+        .nut_variable = "output.voltage",
         .chart_id = "output_voltage",
         .chart_title = "UPS Output voltage",
         .chart_units = "Volts",
@@ -258,7 +258,7 @@ const struct ups_var_chart ups_var_charts[] = {
         .chart_dimension = { "voltage" },
     },
     {
-        .name = "output.voltage.nominal",
+        .nut_variable = "output.voltage.nominal",
         .chart_id = "output_voltage_nominal",
         .chart_title = "UPS Output voltage nominal",
         .chart_units = "Volts",
@@ -270,7 +270,7 @@ const struct ups_var_chart ups_var_charts[] = {
         .chart_dimension = { "nominal_voltage" },
     },
     {
-        .name = "output.current",
+        .nut_variable = "output.current",
         .chart_id = "output_current",
         .chart_title = "UPS Output current",
         .chart_units = "Ampere",
@@ -282,7 +282,7 @@ const struct ups_var_chart ups_var_charts[] = {
         .chart_dimension = { "current" },
     },
     {
-        .name = "output.current.nominal",
+        .nut_variable = "output.current.nominal",
         .chart_id = "output_current_nominal",
         .chart_title = "UPS Output current nominal",
         .chart_units = "Ampere",
@@ -294,7 +294,7 @@ const struct ups_var_chart ups_var_charts[] = {
         .chart_dimension = { "nominal_current" },
     },
     {
-        .name = "output.frequency",
+        .nut_variable = "output.frequency",
         .chart_id = "output_frequency",
         .chart_title = "UPS Output frequency",
         .chart_units = "Hz",
@@ -306,7 +306,7 @@ const struct ups_var_chart ups_var_charts[] = {
         .chart_dimension = { "frequency" },
     },
     {
-        .name = "output.frequency.nominal",
+        .nut_variable = "output.frequency.nominal",
         .chart_id = "output_frequency_nominal",
         .chart_title = "UPS Output frequency nominal",
         .chart_units = "Hz",
@@ -335,7 +335,7 @@ char *clean_name(char *buf, size_t bufsize, const char *name)
     return buf;
 }
 
-bool get_upsd_var(UPSCONN_t *conn, const char *ups_name, const char *var_name, char *buf, size_t bufsize)
+bool get_nut_var(UPSCONN_t *conn, const char *ups_name, const char *var_name, char *buf, size_t bufsize)
 {
     assert(conn);
     assert(ups_name);
@@ -528,9 +528,9 @@ int main(int argc, char *argv[])
         //  { { [0] = "UPS", [1] = <UPS name>, [2] = <UPS description> } }
         const char *ups_name = listups_answer[0][1];
 
-        for (const struct ups_var_chart *chart = ups_var_charts; chart->name; chart++) {
+        for (const struct nd_chart *chart = nd_charts; chart->nut_variable; chart++) {
             // Skip metrics that are not available from the UPS.
-            if (!get_upsd_var(&listvar_conn, ups_name, chart->name, 0, 0))
+            if (!get_nut_var(&listvar_conn, ups_name, chart->nut_variable, 0, 0))
                 continue;
 
             // TODO: do not hardcode update_every
@@ -548,15 +548,15 @@ int main(int argc, char *argv[])
                    "",                    // options
                    NETDATA_PLUGIN_NAME);  // plugin
 
-            if (get_upsd_var(&listvar_conn, ups_name, "battery.type", buf, sizeof(buf)))
+            if (get_nut_var(&listvar_conn, ups_name, "battery.type", buf, sizeof(buf)))
                 printf("CLABEL 'battery_type' '%s' '%u'\n", buf, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
-            if (get_upsd_var(&listvar_conn, ups_name, "device.model", buf, sizeof(buf)))
+            if (get_nut_var(&listvar_conn, ups_name, "device.model", buf, sizeof(buf)))
                 printf("CLABEL 'device_model' '%s' '%u'\n", buf, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
-            if (get_upsd_var(&listvar_conn, ups_name, "device.serial", buf, sizeof(buf)))
+            if (get_nut_var(&listvar_conn, ups_name, "device.serial", buf, sizeof(buf)))
                 printf("CLABEL 'device_serial' '%s' '%u'\n", buf, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
-            if (get_upsd_var(&listvar_conn, ups_name, "device.mfr", buf, sizeof(buf)))
+            if (get_nut_var(&listvar_conn, ups_name, "device.mfr", buf, sizeof(buf)))
                 printf("CLABEL 'device_manufacturer' '%s' '%u'\n", buf, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
-            if (get_upsd_var(&listvar_conn, ups_name, "device.type", buf, sizeof(buf)))
+            if (get_nut_var(&listvar_conn, ups_name, "device.type", buf, sizeof(buf)))
                 printf("CLABEL 'device_type' '%s' '%u'\n", buf, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
 
             printf("CLABEL 'ups_name' '%s' '%u'\n", ups_name, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
@@ -602,8 +602,8 @@ int main(int argc, char *argv[])
                     continue;
                 }
 
-                for (const struct ups_var_chart *chart = ups_var_charts; chart->name; chart++) {
-                    if (!strcmp(var_name, chart->name)) {
+                for (const struct nd_chart *chart = nd_charts; chart->nut_variable; chart++) {
+                    if (!strcmp(var_name, chart->nut_variable)) {
                         printf("BEGIN '%s_%s.%s'\n"
                                "SET '%s' = %s\n"
                                "END\n",
