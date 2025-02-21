@@ -449,7 +449,7 @@ static inline void print_ups_status_metrics(const char *ups_name, const char *va
         }
     }
 
-    printf("BEGIN upsd_%s.status\n"
+    printf("BEGIN %s_%s.status\n"
            "SET 'on_line' = %u\n"
            "SET 'on_battery' = %u\n"
            "SET 'low_battery' = %u\n"
@@ -466,7 +466,7 @@ static inline void print_ups_status_metrics(const char *ups_name, const char *va
            "SET 'forced_shutdown' = %u\n"
            "SET 'other' = %u\n"
            "END\n",
-           ups_name,
+           NETDATA_PLUGIN_NAME, ups_name,
            status.OL,
            status.OB,
            status.LB,
