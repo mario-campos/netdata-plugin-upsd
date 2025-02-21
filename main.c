@@ -9,6 +9,8 @@
 
 #include <upsclient.h>
 
+#define NETDATA_PLUGIN_NAME "upsd"
+
 // https://learn.netdata.cloud/docs/developer-and-contributor-corner/external-plugins#operation
 #define NETDATA_PLUGIN_EXIT_AND_RESTART 0
 // https://learn.netdata.cloud/docs/developer-and-contributor-corner/external-plugins#disable
@@ -531,10 +533,10 @@ int main(int argc, char *argv[])
             if (!get_upsd_var(&listvar_conn, ups_name, chart->name, 0, 0))
                 continue;
 
-            // TODO: do not hardcode update_every and plugin name
+            // TODO: do not hardcode update_every
             // CHART type.id name title units [family [context [charttype [priority [update_every [options [plugin [module]]]]]]]]
-            printf("CHART 'upsd_%s.%s' '%s' '%s' '%s' '%s' '%s' '%s' '%u' '%u' '%s' '%s'\n",
-                   clean_name(buf, sizeof(buf), ups_name), chart->chart_id, // type.id
+            printf("CHART '%s_%s.%s' '%s' '%s' '%s' '%s' '%s' '%s' '%u' '%u' '%s' '%s'\n",
+                   NETDATA_PLUGIN_NAME, clean_name(buf, sizeof(buf), ups_name), chart->chart_id, // type.id
                    "",                    // name
                    chart->chart_title,    // title
                    chart->chart_units,    // units
@@ -544,7 +546,7 @@ int main(int argc, char *argv[])
                    chart->chart_priority, // priority
                    1,                     // update_every
                    "",                    // options
-                   "upsd");               // plugin
+                   NETDATA_PLUGIN_NAME);  // plugin
 
             if (get_upsd_var(&listvar_conn, ups_name, "battery.type", buf, sizeof(buf)))
                 printf("CLABEL 'battery_type' '%s' '%u'\n", buf, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
@@ -558,8 +560,7 @@ int main(int argc, char *argv[])
                 printf("CLABEL 'device_type' '%s' '%u'\n", buf, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
 
             printf("CLABEL 'ups_name' '%s' '%u'\n", ups_name, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
-            // TODO: do not hardcode the plugin name
-            printf("CLABEL '_collect_plugin' '%s' '%u'\n", "upsd", NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
+            printf("CLABEL '_collect_plugin' '%s' '%u'\n", NETDATA_PLUGIN_NAME, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
             puts("CLABEL_COMMIT");
 
             for (size_t i = 0; i < chart->chart_dimlength; i++)
@@ -603,10 +604,10 @@ int main(int argc, char *argv[])
 
                 for (const struct ups_var_chart *chart = ups_var_charts; chart->name; chart++) {
                     if (!strcmp(var_name, chart->name)) {
-                        printf("BEGIN 'upsd_%s.%s'\n"
+                        printf("BEGIN '%s_%s.%s'\n"
                                "SET '%s' = %s\n"
                                "END\n",
-                               clean_ups_name, chart->chart_id,
+                               NETDATA_PLUGIN_NAME, clean_ups_name, chart->chart_id,
                                chart->chart_dimension[0], var_value);
                         break;
                     }
