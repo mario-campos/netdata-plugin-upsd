@@ -477,39 +477,39 @@ static inline void print_ups_status_metrics(const char *ups_name, const char *va
         }
     }
 
-    printf("BEGIN %s.status\n"
-           "SET ups_%s_ups.status.OL = %u\n"
-           "SET ups_%s_ups.status.OB = %u\n"
-           "SET ups_%s_ups.status.LB = %u\n"
-           "SET ups_%s_ups.status.HB = %u\n"
-           "SET ups_%s_ups.status.RB = %u\n"
-           "SET ups_%s_ups.status.CHRG = %u\n"
-           "SET ups_%s_ups.status.DISCHRG = %u\n"
-           "SET ups_%s_ups.status.BYPASS = %u\n"
-           "SET ups_%s_ups.status.CAL = %u\n"
-           "SET ups_%s_ups.status.OFF = %u\n"
-           "SET ups_%s_ups.status.OVER = %u\n"
-           "SET ups_%s_ups.status.TRIM = %u\n"
-           "SET ups_%s_ups.status.BOOST = %u\n"
-           "SET ups_%s_ups.status.FSD = %u\n"
-           "SET ups_%s_ups.status.other = %u\n"
+    printf("BEGIN upsd_%s.status\n"
+           "SET 'on_line' = %u\n"
+           "SET 'on_battery' = %u\n"
+           "SET 'low_battery' = %u\n"
+           "SET 'high_battery' = %u\n"
+           "SET 'replace_battery' = %u\n"
+           "SET 'charging' = %u\n"
+           "SET 'discharging' = %u\n"
+           "SET 'bypass' = %u\n"
+           "SET 'calibration' = %u\n"
+           "SET 'offline' = %u\n"
+           "SET 'overloaded' = %u\n"
+           "SET 'trim_input_voltage' = %u\n"
+           "SET 'boost_input_voltage' = %u\n"
+           "SET 'forced_shutdown' = %u\n"
+           "SET 'other' = %u\n"
            "END\n",
            ups_name,
-           ups_name, status.OL,
-           ups_name, status.OB,
-           ups_name, status.LB,
-           ups_name, status.HB,
-           ups_name, status.RB,
-           ups_name, status.CHRG,
-           ups_name, status.DISCHRG,
-           ups_name, status.BYPASS,
-           ups_name, status.CAL,
-           ups_name, status.OFF,
-           ups_name, status.OVER,
-           ups_name, status.TRIM,
-           ups_name, status.BOOST,
-           ups_name, status.FSD,
-           ups_name, status.OTHER);
+           status.OL,
+           status.OB,
+           status.LB,
+           status.HB,
+           status.RB,
+           status.CHRG,
+           status.DISCHRG,
+           status.BYPASS,
+           status.CAL,
+           status.OFF,
+           status.OVER,
+           status.TRIM,
+           status.BOOST,
+           status.FSD,
+           status.OTHER);
 }
 
 int main(int argc, char *argv[])
@@ -521,7 +521,6 @@ int main(int argc, char *argv[])
     const char *listvar_query[LISTVAR_NUMQ] = { "VAR" };
     UPSCONN_t listups_conn, listvar_conn;
     htss_t variables_ht;
-    htss_t var_chart_ht;
     char buffer[64];
 
     // If we fail to initialize libupsclient or connect to a local
@@ -543,27 +542,6 @@ int main(int argc, char *argv[])
     }
 
     htss_init(&variables_ht, strhash, strkeyeq);
-    htss_init(&var_chart_ht, strhash, strkeyeq);
-
-    // Populate a hash table with the NUT variable names and their corresponding chart IDs.
-    htss_set(&var_chart_ht, "battery.charge", "battery_charge_percentage");
-    htss_set(&var_chart_ht, "battery.runtime", "battery_estimated_runtime");
-    htss_set(&var_chart_ht, "battery.voltage", "battery_voltage");
-    htss_set(&var_chart_ht, "battery.voltage.nominal", "battery_voltage_nominal");
-    htss_set(&var_chart_ht, "input.voltage", "input_voltage");
-    htss_set(&var_chart_ht, "input.voltage.nominal", "input_voltage_nominal");
-    htss_set(&var_chart_ht, "input.current", "input_current");
-    htss_set(&var_chart_ht, "input.current.nominal", "input_current_nominal");
-    htss_set(&var_chart_ht, "input.frequency", "input_frequency");
-    htss_set(&var_chart_ht, "input.frequency.nominal", "input_frequency_nominal");
-    htss_set(&var_chart_ht, "output.voltage", "output_voltage");
-    htss_set(&var_chart_ht, "output.voltage.nominal", "output_voltage_nominal");
-    htss_set(&var_chart_ht, "output.current", "output_current");
-    htss_set(&var_chart_ht, "output.current.nominal", "output_current_nominal");
-    htss_set(&var_chart_ht, "output.frequency", "output_frequency");
-    htss_set(&var_chart_ht, "output.frequency.nominal", "output_frequency_nominal");
-    htss_set(&var_chart_ht, "ups.load", "ups_load_percentage");
-    htss_set(&var_chart_ht, "ups.temperature", "temperature");
 
     rc = upscli_list_start(&listups_conn, LISTUPS_NUMQ, listups_query);
     assert(-1 != rc);
@@ -638,15 +616,17 @@ int main(int argc, char *argv[])
                     continue;
                 }
 
-                if (htss_has(&var_chart_ht, var_name)) {
-                    printf("BEGIN %s.%s\n"
-                           "SET ups_%s_%s = %s\n"
-                           "END\n",
-                           clean_ups_name, htss_get(&var_chart_ht, var_name),
-                           clean_ups_name, var_name, var_value);
+                for (const struct ups_var_chart *chart = ups_var_charts; chart->name; chart++) {
+                    if (!strcmp(var_name, chart->name)) {
+                        printf("BEGIN 'upsd_%s.%s'\n"
+                               "SET '%s' = %s\n"
+                               "END\n",
+                               clean_ups_name, chart->chart_id,
+                               chart->chart_dimension[0], var_value);
+                        break;
+                    }
                 }
             }
-
         }
 
         // Flush the data out of the stream buffer to ensure netdata gets it immediately.
@@ -656,8 +636,6 @@ int main(int argc, char *argv[])
         // TODO: get the sleep duration from argv[1]
         sleep(1);
     }
-
-    htss_uninit(&var_chart_ht);
 
     upscli_disconnect(&listups_conn);
     upscli_disconnect(&listvar_conn);
