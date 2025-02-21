@@ -510,10 +510,10 @@ int main(int argc, char *argv[])
         exit(NETDATA_PLUGIN_EXIT_AND_DISABLE);
     }
 
+    // Query upsd for UPSes with the 'LIST UPS' command.
     rc = upscli_list_start(&listups_conn, sizeof(listups_query)/sizeof(char*), listups_query);
     assert(-1 != rc);
 
-    // Query upsd for UPSes with the 'LIST UPS' command.
     while ((rc = upscli_list_next(&listups_conn, sizeof(listups_query)/sizeof(char*), listups_query, &numa, (char***)&listups_answer))) {
         assert(-1 != rc);
 
