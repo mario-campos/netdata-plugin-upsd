@@ -492,7 +492,6 @@ int main(int argc, char *argv[])
     const char *query[1] = { "UPS" };
     UPSCONN_t ups1, ups2;
     char buf[BUFLEN];
-    char output[BUFSIZ];
 
     // If we fail to initialize libupsclient or connect to a local
     // UPS, then there's nothing more to be done; Netdata should disable
@@ -513,7 +512,7 @@ int main(int argc, char *argv[])
     }
 
     // Set stdout to block-buffered, to make printf() faster.
-    setvbuf(stdout, output, _IOFBF, sizeof(output));
+    setvbuf(stdout, NULL, _IOFBF, BUFSIZ);
 
     // Query upsd for UPSes with the 'LIST UPS' command.
     rc = upscli_list_start(&ups1, LENGTHOF(query), query);
