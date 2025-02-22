@@ -335,7 +335,7 @@ char *clean_name(char *buf, size_t bufsize, const char *name)
     return buf;
 }
 
-bool get_nut_var(UPSCONN_t *conn, const char *ups_name, const char *var_name, char *buf, size_t bufsize)
+const char *get_nut_var(UPSCONN_t *conn, const char *ups_name, const char *var_name)
 {
     assert(conn);
     assert(ups_name);
@@ -347,16 +347,12 @@ bool get_nut_var(UPSCONN_t *conn, const char *ups_name, const char *var_name, ch
     
     if (-1 == upscli_get(conn, LENGTHOF(query), query, &numa, (char***)answer)) {
         assert(upscli_upserror(conn) == UPSCLI_ERR_VARNOTSUPP);
-        return false;
+        return NULL;
     }
 
-    if (buf) {
-        // The output of upscli_get() will be something like:
-        //   { { [0] = "VAR", [1] = <UPS name>, [2] = <variable name>, [3] = <variable value> } }
-        snprintf(buf, bufsize, "%s", answer[0][3]);
-    }
-
-    return true;
+    // The output of upscli_get() will be something like:
+    //   { { [0] = "VAR", [1] = <UPS name>, [2] = <variable name>, [3] = <variable value> } }
+    return answer[0][3];
 }
 
 // This function parses the 'ups.status' variable and emits the Netdata metrics
@@ -531,8 +527,10 @@ int main(int argc, char *argv[])
         const char *ups_name = answer[0][1];
 
         for (const struct nd_chart *chart = nd_charts; chart->nut_variable; chart++) {
+            const char *nut_value;
+
             // Skip metrics that are not available from the UPS.
-            if (!get_nut_var(&ups2, ups_name, chart->nut_variable, 0, 0))
+            if (!get_nut_var(&ups2, ups_name, chart->nut_variable))
                 continue;
 
             // TODO: do not hardcode update_every
@@ -550,16 +548,16 @@ int main(int argc, char *argv[])
                    "",                    // options
                    NETDATA_PLUGIN_NAME);  // plugin
 
-            if (get_nut_var(&ups2, ups_name, "battery.type", buf, sizeof(buf)))
-                printf("CLABEL 'battery_type' '%s' '%u'\n", buf, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
-            if (get_nut_var(&ups2, ups_name, "device.model", buf, sizeof(buf)))
-                printf("CLABEL 'device_model' '%s' '%u'\n", buf, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
-            if (get_nut_var(&ups2, ups_name, "device.serial", buf, sizeof(buf)))
-                printf("CLABEL 'device_serial' '%s' '%u'\n", buf, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
-            if (get_nut_var(&ups2, ups_name, "device.mfr", buf, sizeof(buf)))
-                printf("CLABEL 'device_manufacturer' '%s' '%u'\n", buf, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
-            if (get_nut_var(&ups2, ups_name, "device.type", buf, sizeof(buf)))
-                printf("CLABEL 'device_type' '%s' '%u'\n", buf, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
+            if ((nut_value = get_nut_var(&ups2, ups_name, "battery.type")))
+                printf("CLABEL 'battery_type' '%s' '%u'\n", nut_value, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
+            if ((nut_value = get_nut_var(&ups2, ups_name, "device.model")))
+                printf("CLABEL 'device_model' '%s' '%u'\n", nut_value, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
+            if ((nut_value = get_nut_var(&ups2, ups_name, "device.serial")))
+                printf("CLABEL 'device_serial' '%s' '%u'\n", nut_value, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
+            if ((nut_value = get_nut_var(&ups2, ups_name, "device.mfr")))
+                printf("CLABEL 'device_manufacturer' '%s' '%u'\n", nut_value, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
+            if ((nut_value = get_nut_var(&ups2, ups_name, "device.type")))
+                printf("CLABEL 'device_type' '%s' '%u'\n", nut_value, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
 
             printf("CLABEL 'ups_name' '%s' '%u'\n", ups_name, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
             printf("CLABEL '_collect_plugin' '%s' '%u'\n", NETDATA_PLUGIN_NAME, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
@@ -583,10 +581,10 @@ int main(int argc, char *argv[])
             const char *clean_ups_name = clean_name(buf, sizeof(buf), ups_name);
 
             for (const struct nd_chart *chart = nd_charts; chart->nut_variable; chart++) {
-                char nut_value[BUFLEN];
+                const char *nut_value;
 
                 // Skip metrics that are not available from the UPS.
-                if (!get_nut_var(&ups2, ups_name, chart->nut_variable, nut_value, sizeof(nut_value)))
+                if (!(nut_value = get_nut_var(&ups2, ups_name, chart->nut_variable)))
                     continue;
 
                 // The 'ups.status' variable is a special case, because its chart has more
