@@ -700,6 +700,12 @@ int main(int argc, char *argv[])
         // Flush the data out of the stream buffer to ensure netdata gets it immediately.
         // https://learn.netdata.cloud/docs/developer-and-contributor-corner/external-plugins#the-output-of-the-plugin
         fflush(stdout);
+        // stdout, stderr are connected to pipes.
+        // So, if they are closed then netdata must have exited.
+        if (ferror(stdout) && errno == EPIPE) {
+            perror("fflush(3)");
+            return EXIT_FAILURE;
+        }
     }
 
     upscli_disconnect(&ups1);
