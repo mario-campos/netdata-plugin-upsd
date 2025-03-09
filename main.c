@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -10,6 +11,9 @@
 #include <upsclient.h>
 
 #define NETDATA_PLUGIN_NAME "upsd"
+
+// TODO: do not hardcode NETDATA_VERSION
+#define NETDATA_VERSION "1.0.0"
 
 // https://learn.netdata.cloud/docs/developer-and-contributor-corner/external-plugins#operation
 #define NETDATA_PLUGIN_EXIT_AND_RESTART 0
@@ -26,6 +30,9 @@
 
 #define BUFLEN 64
 #define LENGTHOF(arr) (sizeof(arr)/sizeof(arr[0]))
+
+static bool debug = false;
+static unsigned long netdata_update_every = 1;
 
 // https://networkupstools.org/docs/developer-guide.chunked/new-drivers.html#_status_data
 struct nut_ups_status {
@@ -321,6 +328,72 @@ const struct nd_chart nd_charts[] = {
     { 0 },
 };
 
+void print_version()
+{
+    fputs("netdata " NETDATA_PLUGIN_NAME ".plugin " NETDATA_VERSION "\n"
+          "\n"
+          "Copyright 2025 Netdata Inc.\n"
+          "Original Author: Mario Campos <mario.andres.campos@gmail.com>\n"
+          "Released under GNU General Public License v3+.\n"
+          "\n"
+          "This program is a data collector plugin for netdata.\n",
+          stderr
+    );
+}
+
+void print_help()
+{
+    fputs("usage: upsd.plugin [-d] COLLECTION_FREQUENCY\n"
+          "       upsd.plugin -v\n"
+          "       upsd.plugin -h\n"
+          "\n"
+          "options:\n"
+          "  COLLECTION_FREQUENCY    data collection frequency in seconds\n"
+          "  -d                      enable verbose output (default: disabled)\n"
+          "  -v                      print version and exit\n"
+          "  -h                      print this message and exit\n",
+          stderr
+    );
+}
+
+// Netdata will call the plugin with just one command line parameter: the number of
+// seconds the user requested this plugin to update its data (by default is also 1).
+void parse_command_line(int argc, char *argv[])
+{
+    int opt;
+    char *endptr;
+
+    while ((opt = getopt(argc, argv, "hvd")) != -1) {
+        switch (opt) {
+        case 'h':
+            print_help();
+            exit(0);
+        case 'v':
+            print_version();
+            exit(0);
+        case 'd':
+            debug = true;
+            break;
+        default:
+            print_help();
+            exit(1);
+        }
+    }
+
+    if (optind >= argc) {
+        print_help();
+        exit(1);
+    }
+
+    errno = 0;
+    netdata_update_every = strtoul(argv[optind], &endptr, 10);
+
+    if (errno == ERANGE || errno == EINVAL || *endptr != '\0' || endptr == argv[optind]) {
+        print_help();
+        exit(1);
+    }
+}
+
 char *clean_name(char *buf, size_t bufsize, const char *name)
 {
     assert(buf);
@@ -489,6 +562,8 @@ int main(int argc, char *argv[])
     const char *query[1] = { "UPS" };
     UPSCONN_t ups1, ups2;
     char buf[BUFLEN];
+
+    parse_command_line(argc, argv);
 
     // If we fail to initialize libupsclient or connect to a local
     // UPS, then there's nothing more to be done; Netdata should disable
