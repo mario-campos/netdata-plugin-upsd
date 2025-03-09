@@ -367,22 +367,22 @@ void parse_command_line(int argc, char *argv[])
         switch (opt) {
         case 'h':
             print_help();
-            exit(0);
+            exit(EXIT_SUCCESS);
         case 'v':
             print_version();
-            exit(0);
+            exit(EXIT_SUCCESS);
         case 'd':
             debug = true;
             break;
         default:
             print_help();
-            exit(1);
+            exit(EXIT_FAILURE);
         }
     }
 
     if (optind >= argc) {
         print_help();
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     errno = 0;
@@ -390,7 +390,7 @@ void parse_command_line(int argc, char *argv[])
 
     if (errno == ERANGE || errno == EINVAL || *endptr != '\0' || endptr == argv[optind]) {
         print_help();
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 }
 
