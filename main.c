@@ -386,12 +386,19 @@ void parse_command_line(int argc, char *argv[])
     }
 
     errno = 0;
-    netdata_update_every = strtoul(argv[optind], &endptr, 10);
+    long unsigned int arg_update_every = strtoul(argv[optind], &endptr, 10);
 
     if (errno == ERANGE || errno == EINVAL || *endptr != '\0' || endptr == argv[optind]) {
         print_help();
         exit(EXIT_FAILURE);
     }
+
+    if (arg_update_every <= 0 || arg_update_every >= 86400) {
+        fputs("COLLECTION_FREQUENCY argument must be between [1,86400)", stderr);
+        exit(EXIT_FAILURE);
+    }
+
+    netdata_update_every = arg_update_every;
 }
 
 char *clean_name(char *buf, size_t bufsize, const char *name)
