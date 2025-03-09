@@ -22,6 +22,8 @@
 #define NETDATA_PLUGIN_CLABEL_SOURCE_K8     4
 #define NETDATA_PLUGIN_CLABEL_SOURCE_AGENT  8
 
+#define NETDATA_PLUGIN_PRECISION 100
+
 #define BUFLEN 64
 #define LENGTHOF(arr) (sizeof(arr)/sizeof(arr[0]))
 
@@ -73,8 +75,7 @@ const struct nd_chart nd_charts[] = {
         .chart_dimension = { "load" },
     },
     {
-        // TODO: this is not a real variable from NUT
-        .nut_variable = "ups.load_usage",
+        .nut_variable = "ups.realpower",
         .chart_id = "load_usage",
         .chart_title = "UPS load usage (power output)",
         .chart_units = "Watts",
@@ -527,10 +528,17 @@ int main(int argc, char *argv[])
         const char *ups_name = answer[0][1];
 
         for (const struct nd_chart *chart = nd_charts; chart->nut_variable; chart++) {
-            const char *nut_value;
+            const char *nut_value = get_nut_var(&ups2, ups_name, chart->nut_variable);
 
             // Skip metrics that are not available from the UPS.
-            if (!get_nut_var(&ups2, ups_name, chart->nut_variable))
+            if (!nut_value && strcmp(chart->nut_variable, "ups.realpower"))
+                continue;
+
+            // If the UPS does not support the 'ups.realpower' variable, then
+            // we can still calculate the load_usage if the 'ups.load' and
+            // 'ups.realpower.nominal' variables are available.
+            if (!nut_value && !strcmp(chart->nut_variable, "ups.realpower") &&
+                (!get_nut_var(&ups2, ups_name, "ups.load") || !get_nut_var(&ups2, ups_name, "ups.realpower.nominal")))
                 continue;
 
             // TODO: do not hardcode update_every
@@ -581,11 +589,23 @@ int main(int argc, char *argv[])
             const char *clean_ups_name = clean_name(buf, sizeof(buf), ups_name);
 
             for (const struct nd_chart *chart = nd_charts; chart->nut_variable; chart++) {
-                const char *nut_value;
+                const char *nut_value = get_nut_var(&ups2, ups_name, chart->nut_variable);
 
                 // Skip metrics that are not available from the UPS.
-                if (!(nut_value = get_nut_var(&ups2, ups_name, chart->nut_variable)))
+                if (!nut_value && strcmp(chart->nut_variable, "ups.realpower"))
                     continue;
+
+                if (!nut_value && !strcmp(chart->nut_variable, "ups.realpower")) {
+                    if (get_nut_var(&ups2, ups_name, "ups.load") &&
+                        get_nut_var(&ups2, ups_name, "ups.realpower.nominal")) {
+                        double load = atof(get_nut_var(&ups2, ups_name, "ups.load"));
+                        double nominal = atof(get_nut_var(&ups2, ups_name, "ups.realpower.nominal"));
+                        double load_usage = (load / 100) * nominal * NETDATA_PLUGIN_PRECISION;
+                        snprintf(buf, sizeof(buf), "%d", (int)load_usage);
+                        nut_value = buf;
+                    }
+                    else continue;
+                }
 
                 // The 'ups.status' variable is a special case, because its chart has more
                 // than one dimension. So, we can't simply print one data point.
