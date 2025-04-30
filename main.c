@@ -653,8 +653,8 @@ int main(int argc, char *argv[])
             printf("CLABEL '_collect_plugin' '%s' '%u'\n", NETDATA_PLUGIN_NAME, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
             puts("CLABEL_COMMIT");
 
-            for (size_t i = 0; i < chart->chart_dimlength; i++)
-                printf("DIMENSION '%s'\n", chart->chart_dimension[i]);
+            for (size_t j = 0; j < chart->chart_dimlength; j++)
+                printf("DIMENSION '%s'\n", chart->chart_dimension[j]);
         }
     }
 
