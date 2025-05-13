@@ -328,6 +328,55 @@ const struct nd_chart nd_charts[] = {
     { 0 },
 };
 
+// Structure to cache seen UPS names
+struct seen_ups {
+    char **data;
+    size_t size;
+    size_t capacity;
+};
+
+void seen_ups_init(struct seen_ups *cache) {
+    assert(cache);
+    cache->data = NULL;
+    cache->size = 0;
+    cache->capacity = 0;
+}
+
+void seen_ups_add(struct seen_ups *cache, const char *ups_name) {
+    assert(cache);
+    assert(ups_name);
+
+    // Check if the UPS name is already in the cache
+    for (size_t i = 0; i < cache->size; i++) {
+        if (strcmp(cache->data[i], ups_name) == 0) {
+            return; // UPS name already cached
+        }
+    }
+
+    // Resize the cache if necessary
+    if (cache->size == cache->capacity) {
+        cache->capacity = (cache->capacity == 0) ? 4 : cache->capacity * 2;
+        cache->data = reallocarray(cache->data, cache->capacity, sizeof(char *));
+        assert(cache->data);
+    }
+
+    // Add the new UPS name to the cache
+    cache->data[cache->size] = strdup(ups_name);
+    assert(cache->data[cache->size]);
+    cache->size++;
+}
+
+void seen_ups_free(struct seen_ups *cache) {
+    assert(cache);
+    for (size_t i = 0; i < cache->size; i++) {
+        free(cache->data[i]);
+    }
+    free(cache->data);
+    cache->data = NULL;
+    cache->size = 0;
+    cache->capacity = 0;
+}
+
 void print_version()
 {
     fputs("netdata " NETDATA_PLUGIN_NAME ".plugin " NETDATA_VERSION "\n"
@@ -563,12 +612,12 @@ static inline void print_ups_status_metrics(const char *ups_name, const char *va
 
 int main(int argc, char *argv[])
 {
-    int rc;
     size_t numa;
     char **answer[1];
     const char *query[1] = { "UPS" };
     UPSCONN_t ups1, ups2;
     char buf[BUFLEN];
+    struct seen_ups seen_ups = { 0 };
 
     parse_command_line(argc, argv);
 
@@ -594,20 +643,32 @@ int main(int argc, char *argv[])
     setvbuf(stdout, NULL, _IOFBF, BUFSIZ);
 
     // Query upsd for UPSes with the 'LIST UPS' command.
-    rc = upscli_list_start(&ups1, LENGTHOF(query), query);
+    int rc = upscli_list_start(&ups1, LENGTHOF(query), query);
     assert(-1 != rc);
 
-    while ((rc = upscli_list_next(&ups1, LENGTHOF(query), query, &numa, (char***)&answer))) {
+    for (size_t i = 0;; i++) {
+        rc = upscli_list_next(&ups1, LENGTHOF(query), query, &numa, (char***)&answer);
         assert(-1 != rc);
 
-        // Unfortunately, upscli_list_next() will emit the list delimiter
-        // "END LIST UPS" as its last iteration before returning 0. We don't
-        // need it, so let's skip processing on that item.
-        if (!strcmp("END", answer[0][0])) continue;
+        // upscli_list_next() will emit the list delimiter "END LIST UPS"
+        // as its last iteration before returning 0.
+        if (!strcmp("END", answer[0][0])) {
+            seen_ups.size = i;
+            break;
+        }
+
+        if (i > seen_ups.capacity) {
+            errno = 0;
+            seen_ups.capacity *= 2;
+            seen_ups.data = reallocarray(seen_ups.data, seen_ups.capacity, sizeof(char*));
+            assert(0 == errno);
+        }
 
         // The output of upscli_list_next() will be something like:
         //  { { [0] = "UPS", [1] = <UPS name>, [2] = <UPS description> } }
         const char *ups_name = answer[0][1];
+
+        seen_ups.data[i] = strdup(ups_name);
 
         for (const struct nd_chart *chart = nd_charts; chart->nut_variable; chart++) {
             const char *nut_value = get_nut_var(&ups2, ups_name, chart->nut_variable);
