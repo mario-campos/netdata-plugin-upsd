@@ -597,6 +597,7 @@ int main(int argc, char *argv[])
     char **answer[1];
     UPSCONN_t ups1, ups2;
     char buf[BUFLEN];
+    unsigned int first_ups_count = 0;
 
     parse_command_line(argc, argv);
 
@@ -622,6 +623,8 @@ int main(int argc, char *argv[])
     setvbuf(stdout, NULL, _IOFBF, BUFSIZ);
 
     while (nut_list_ups(&ups1, &numa, (char***)&answer)) {
+        first_ups_count++;
+
         // The output of nut_list_ups() will be something like:
         //  { { [0] = "UPS", [1] = <UPS name>, [2] = <UPS description> } }
         const char *ups_name = answer[0][1];
@@ -676,7 +679,10 @@ int main(int argc, char *argv[])
     }
 
     for (int i = 0; i < 1; i++) {
+        unsigned int this_ups_count = 0;
         while (nut_list_ups(&ups1, &numa, (char***)&answer)) {
+            this_ups_count++;
+
             const char *ups_name = answer[0][1];
             const char *clean_ups_name = clean_name(buf, sizeof(buf), ups_name);
 
@@ -717,11 +723,20 @@ int main(int argc, char *argv[])
         // Flush the data out of the stream buffer to ensure netdata gets it immediately.
         // https://learn.netdata.cloud/docs/developer-and-contributor-corner/external-plugins#the-output-of-the-plugin
         fflush(stdout);
+
         // stdout, stderr are connected to pipes.
         // So, if they are closed then netdata must have exited.
         if (ferror(stdout) && errno == EPIPE) {
             perror("fflush(3)");
             return EXIT_FAILURE;
+        }
+
+        // If the last UPS count does not match the current UPS count, then there's a real
+        // chance that our UPS information is outdated; restart this plugin to get accurate UPSes.
+        if (first_ups_count != this_ups_count) {
+            fprintf(stderr, "Detected change in UPSes (count: %u -> %u); restarting to read UPS data.\n",
+                first_ups_count, this_ups_count);
+            return NETDATA_PLUGIN_EXIT_AND_RESTART;
         }
     }
 
