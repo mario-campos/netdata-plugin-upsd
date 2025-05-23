@@ -416,7 +416,7 @@ char *clean_name(char *buf, size_t bufsize, const char *name)
     return buf;
 }
 
-const char *get_nut_var(UPSCONN_t *conn, const char *ups_name, const char *var_name)
+const char *nut_get_var(UPSCONN_t *conn, const char *ups_name, const char *var_name)
 {
     assert(conn);
     assert(ups_name);
@@ -436,7 +436,7 @@ const char *get_nut_var(UPSCONN_t *conn, const char *ups_name, const char *var_n
     return answer[0][3];
 }
 
-int list_nut_ups(UPSCONN_t *ups, size_t *numa, char ***answer)
+int nut_list_ups(UPSCONN_t *ups, size_t *numa, char ***answer)
 {
     assert(ups);
     assert(numa);
@@ -621,13 +621,13 @@ int main(int argc, char *argv[])
     // Set stdout to block-buffered, to make printf() faster.
     setvbuf(stdout, NULL, _IOFBF, BUFSIZ);
 
-    while (list_nut_ups(&ups1, &numa, (char***)&answer)) {
-        // The output of list_nut_ups() will be something like:
+    while (nut_list_ups(&ups1, &numa, (char***)&answer)) {
+        // The output of nut_list_ups() will be something like:
         //  { { [0] = "UPS", [1] = <UPS name>, [2] = <UPS description> } }
         const char *ups_name = answer[0][1];
 
         for (const struct nd_chart *chart = nd_charts; chart->nut_variable; chart++) {
-            const char *nut_value = get_nut_var(&ups2, ups_name, chart->nut_variable);
+            const char *nut_value = nut_get_var(&ups2, ups_name, chart->nut_variable);
 
             // Skip metrics that are not available from the UPS.
             if (!nut_value && strcmp(chart->nut_variable, "ups.realpower"))
@@ -637,7 +637,7 @@ int main(int argc, char *argv[])
             // we can still calculate the load_usage if the 'ups.load' and
             // 'ups.realpower.nominal' variables are available.
             if (!nut_value && !strcmp(chart->nut_variable, "ups.realpower") &&
-                (!get_nut_var(&ups2, ups_name, "ups.load") || !get_nut_var(&ups2, ups_name, "ups.realpower.nominal")))
+                (!nut_get_var(&ups2, ups_name, "ups.load") || !nut_get_var(&ups2, ups_name, "ups.realpower.nominal")))
                 continue;
 
             // TODO: do not hardcode update_every
@@ -655,15 +655,15 @@ int main(int argc, char *argv[])
                    "",                    // options
                    NETDATA_PLUGIN_NAME);  // plugin
 
-            if ((nut_value = get_nut_var(&ups2, ups_name, "battery.type")))
+            if ((nut_value = nut_get_var(&ups2, ups_name, "battery.type")))
                 printf("CLABEL 'battery_type' '%s' '%u'\n", nut_value, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
-            if ((nut_value = get_nut_var(&ups2, ups_name, "device.model")))
+            if ((nut_value = nut_get_var(&ups2, ups_name, "device.model")))
                 printf("CLABEL 'device_model' '%s' '%u'\n", nut_value, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
-            if ((nut_value = get_nut_var(&ups2, ups_name, "device.serial")))
+            if ((nut_value = nut_get_var(&ups2, ups_name, "device.serial")))
                 printf("CLABEL 'device_serial' '%s' '%u'\n", nut_value, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
-            if ((nut_value = get_nut_var(&ups2, ups_name, "device.mfr")))
+            if ((nut_value = nut_get_var(&ups2, ups_name, "device.mfr")))
                 printf("CLABEL 'device_manufacturer' '%s' '%u'\n", nut_value, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
-            if ((nut_value = get_nut_var(&ups2, ups_name, "device.type")))
+            if ((nut_value = nut_get_var(&ups2, ups_name, "device.type")))
                 printf("CLABEL 'device_type' '%s' '%u'\n", nut_value, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
 
             printf("CLABEL 'ups_name' '%s' '%u'\n", ups_name, NETDATA_PLUGIN_CLABEL_SOURCE_AUTO);
@@ -676,22 +676,22 @@ int main(int argc, char *argv[])
     }
 
     for (int i = 0; i < 1; i++) {
-        while (list_nut_ups(&ups1, &numa, (char***)&answer)) {
+        while (nut_list_ups(&ups1, &numa, (char***)&answer)) {
             const char *ups_name = answer[0][1];
             const char *clean_ups_name = clean_name(buf, sizeof(buf), ups_name);
 
             for (const struct nd_chart *chart = nd_charts; chart->nut_variable; chart++) {
-                const char *nut_value = get_nut_var(&ups2, ups_name, chart->nut_variable);
+                const char *nut_value = nut_get_var(&ups2, ups_name, chart->nut_variable);
 
                 // Skip metrics that are not available from the UPS.
                 if (!nut_value && strcmp(chart->nut_variable, "ups.realpower"))
                     continue;
 
                 if (!nut_value && !strcmp(chart->nut_variable, "ups.realpower")) {
-                    if (get_nut_var(&ups2, ups_name, "ups.load") &&
-                        get_nut_var(&ups2, ups_name, "ups.realpower.nominal")) {
-                        double load = atof(get_nut_var(&ups2, ups_name, "ups.load"));
-                        double nominal = atof(get_nut_var(&ups2, ups_name, "ups.realpower.nominal"));
+                    if (nut_get_var(&ups2, ups_name, "ups.load") &&
+                        nut_get_var(&ups2, ups_name, "ups.realpower.nominal")) {
+                        double load = atof(nut_get_var(&ups2, ups_name, "ups.load"));
+                        double nominal = atof(nut_get_var(&ups2, ups_name, "ups.realpower.nominal"));
                         double load_usage = (load / 100) * nominal * NETDATA_PLUGIN_PRECISION;
                         snprintf(buf, sizeof(buf), "%d", (int)load_usage);
                         nut_value = buf;
