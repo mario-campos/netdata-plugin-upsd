@@ -436,6 +436,36 @@ const char *get_nut_var(UPSCONN_t *conn, const char *ups_name, const char *var_n
     return answer[0][3];
 }
 
+int list_nut_ups(UPSCONN_t *ups, size_t *numa, char ***answer)
+{
+    assert(ups);
+    assert(numa);
+    assert(answer);
+
+    int rc;
+    static bool started = false;
+    const char *query[] = { "UPS" };
+
+    if (!started) {
+        rc = upscli_list_start(ups, LENGTHOF(query), query);
+        assert(rc != -1);
+        started = true;
+    }
+
+    rc = upscli_list_next(ups, LENGTHOF(query), query, numa, answer);
+    assert(rc != -1);
+
+    // Unfortunately, list_ups_next() will emit the list delimiter
+    // "END LIST UPS" as its last iteration before returning 0. We don't
+    // need it, so let's skip processing on that item.
+    if (!strcmp("END", answer[0][0])) {
+        started = false;
+        return 0;
+    }
+
+    return 1;
+}
+
 // This function parses the 'ups.status' variable and emits the Netdata metrics
 // for each status, printing 1 for each set status and 0 otherwise.
 static inline void print_ups_status_metrics(const char *ups_name, const char *value)
@@ -563,10 +593,8 @@ static inline void print_ups_status_metrics(const char *ups_name, const char *va
 
 int main(int argc, char *argv[])
 {
-    int rc;
     size_t numa;
     char **answer[1];
-    const char *query[1] = { "UPS" };
     UPSCONN_t ups1, ups2;
     char buf[BUFLEN];
 
@@ -593,19 +621,8 @@ int main(int argc, char *argv[])
     // Set stdout to block-buffered, to make printf() faster.
     setvbuf(stdout, NULL, _IOFBF, BUFSIZ);
 
-    // Query upsd for UPSes with the 'LIST UPS' command.
-    rc = upscli_list_start(&ups1, LENGTHOF(query), query);
-    assert(-1 != rc);
-
-    while ((rc = upscli_list_next(&ups1, LENGTHOF(query), query, &numa, (char***)&answer))) {
-        assert(-1 != rc);
-
-        // Unfortunately, upscli_list_next() will emit the list delimiter
-        // "END LIST UPS" as its last iteration before returning 0. We don't
-        // need it, so let's skip processing on that item.
-        if (!strcmp("END", answer[0][0])) continue;
-
-        // The output of upscli_list_next() will be something like:
+    while (list_nut_ups(&ups1, &numa, (char***)&answer)) {
+        // The output of list_nut_ups() will be something like:
         //  { { [0] = "UPS", [1] = <UPS name>, [2] = <UPS description> } }
         const char *ups_name = answer[0][1];
 
@@ -659,14 +676,7 @@ int main(int argc, char *argv[])
     }
 
     for (int i = 0; i < 1; i++) {
-        rc = upscli_list_start(&ups1, LENGTHOF(query), query);
-        assert(-1 != rc);
-
-        while ((rc = upscli_list_next(&ups1, LENGTHOF(query), query, &numa, (char***)&answer))) {
-            assert(-1 != rc);
-
-            if (!strcmp("END", answer[0][0])) continue;
-
+        while (list_nut_ups(&ups1, &numa, (char***)&answer)) {
             const char *ups_name = answer[0][1];
             const char *clean_ups_name = clean_name(buf, sizeof(buf), ups_name);
 
