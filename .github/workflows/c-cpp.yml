@@ -2,7 +2,6 @@ name: C/C++ CI
 
 on:
   push:
-    branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
 
@@ -11,9 +10,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        repository: netdata/netdata
+        path: netdata
+    - uses: actions/checkout@v4
     - name: install dependencies
       run: |
         sudo apt update -qq
         sudo apt install -qq libupsclient-dev
     - name: make
-      run: clang -Wall main.c -lupsclient
+      run: clang -Wall -Inetdata/src main.c -lupsclient
