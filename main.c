@@ -9,11 +9,9 @@
 #include <unistd.h>
 
 #include <upsclient.h>
+#include "libnetdata/libnetdata.h"
 
 #define NETDATA_PLUGIN_NAME "upsd"
-
-// TODO: do not hardcode NETDATA_VERSION
-#define NETDATA_VERSION "1.0.0"
 
 // https://learn.netdata.cloud/docs/developer-and-contributor-corner/external-plugins#operation
 #define NETDATA_PLUGIN_EXIT_AND_RESTART 0
@@ -380,25 +378,16 @@ void parse_command_line(int argc, char *argv[])
         }
     }
 
-    if (optind >= argc) {
+    if (optind >= argc || !isdigit(argv[optind])) {
         print_help();
         exit(EXIT_FAILURE);
     }
 
-    errno = 0;
-    long unsigned int arg_update_every = strtoul(argv[optind], &endptr, 10);
-
-    if (errno == ERANGE || errno == EINVAL || *endptr != '\0' || endptr == argv[optind]) {
-        print_help();
-        exit(EXIT_FAILURE);
-    }
-
-    if (arg_update_every <= 0 || arg_update_every >= 86400) {
+    netdata_update_every = str2i(argv[optind]);
+    if (netdata_update_every <= 0 || netdata_update_every >= 86400) {
         fputs("COLLECTION_FREQUENCY argument must be between [1,86400)", stderr);
         exit(EXIT_FAILURE);
     }
-
-    netdata_update_every = arg_update_every;
 }
 
 char *clean_name(char *buf, size_t bufsize, const char *name)
@@ -678,7 +667,14 @@ int main(int argc, char *argv[])
         }
     }
 
-    for (int i = 0; i < 1; i++) {
+    heartbeat_t hb;
+    heartbeat_init(&hb, netdata_update_every * USEC_PER_SEC);
+    for (;;) {
+        heartbeat_next(&hb);
+
+        if (unlikely(exit_initiated_get()))
+            break;
+
         unsigned int this_ups_count = 0;
         while (nut_list_ups(&ups1, &numa, (char***)&answer)) {
             this_ups_count++;
@@ -733,14 +729,23 @@ int main(int argc, char *argv[])
 
         // If the last UPS count does not match the current UPS count, then there's a real
         // chance that our UPS information is outdated; restart this plugin to get accurate UPSes.
-        if (first_ups_count != this_ups_count) {
+        if (unlikely(first_ups_count != this_ups_count)) {
             fprintf(stderr, "Detected change in UPSes (count: %u -> %u); restarting to read UPS data.\n",
                 first_ups_count, this_ups_count);
-            return NETDATA_PLUGIN_EXIT_AND_RESTART;
+            break;
         }
+
+        if (unlikely(exit_initiated_get()))
+            break;
+
+        // restart check (14400 seconds)
+        if (unlikely(now_monotonic_sec() - started_t > 14400))
+            break;
     }
 
     upscli_disconnect(&ups1);
     upscli_disconnect(&ups2);
     upscli_cleanup();
+
+    return NETDATA_PLUGIN_EXIT_AND_RESTART
 }
