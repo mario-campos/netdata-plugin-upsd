@@ -19,4 +19,9 @@ jobs:
         sudo apt update -qq
         sudo apt install -qq libupsclient-dev
     - name: make
-      run: clang -Wall -Inetdata/src main.c -lupsclient
+      run: |
+        ls -l
+        ls -l netdata
+        ls -l netdata/src
+        ls -l netdata/src/libnetdata/libnetdata.h
+        clang -Wall -Inetdata/src main.c -lupsclient
