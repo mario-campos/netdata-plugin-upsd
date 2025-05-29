@@ -9,19 +9,27 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/checkout@v4
+    - name: Checkout netdata-plugin-upsd
+      uses: actions/checkout@v4
+
+    - name: Checkout netdata/netdata
+      uses: actions/checkout@v4
       with:
         repository: netdata/netdata
         path: netdata
-    - name: install dependencies
+        submodules: recursive
+
+    - name: Install netdata's dependencies
+      run: exec netdata/packaging/installer/install-required-packages.sh
+
+    - name: Build netdata
+      run: sudo bash ./netdata-installer.sh --dont-start-it --disable-go
+      working-directory: netdata
+
+    - name: install netdata-plugin-upsd's dependencies
       run: |
         sudo apt update -qq
         sudo apt install -qq libupsclient-dev
+
     - name: make
-      run: |
-        ls -l
-        ls -l netdata
-        ls -l netdata/src
-        ls -l netdata/src/libnetdata/libnetdata.h
-        clang -Wall -Inetdata/src main.c -lupsclient
+      run: clang -Wall -Inetdata/src main.c -lupsclient
