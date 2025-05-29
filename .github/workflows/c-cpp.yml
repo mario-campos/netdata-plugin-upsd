@@ -20,7 +20,10 @@ jobs:
         submodules: recursive
 
     - name: Install netdata's dependencies
-      run: exec netdata/packaging/installer/install-required-packages.sh
+      run: >
+        exec netdata/packaging/installer/install-required-packages.sh 
+          --dont-wait
+          --non-interactive
 
     - name: Build netdata
       run: sudo bash ./netdata-installer.sh --dont-start-it --disable-go
