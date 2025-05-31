@@ -31,8 +31,5 @@ jobs:
       run: sudo bash ./netdata-installer.sh --dont-start-it --disable-go
       working-directory: netdata
 
-    - name: find config.h
-      run: find netdata/build -type f -name config.h
-
     - name: make
-      run: clang -Wall -Inetdata/src main.c -lupsclient netdata/build/liblibnetdata.a
+      run: clang -Wall -Inetdata/build -Inetdata/src main.c netdata/build/liblibnetdata.a -lupsclient
