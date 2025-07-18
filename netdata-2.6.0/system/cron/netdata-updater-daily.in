@@ -1,0 +1,1 @@
+57 2 * * * root @pkglibexecdir_POST@/netdata-updater.sh
