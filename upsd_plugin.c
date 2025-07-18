@@ -558,7 +558,7 @@ static void register_ups(char *ups_name) {
     netdata_log_info("Registering UPS '%s' for Netdata metric collection", ups_name);
 
     // CHART type.id name title units [family [context [charttype [priority [update_every [options [plugin [module]]]]]]]]
-    printf("CHART 'upsd_%s.status' '' 'UPS status' 'status' 'ups' 'upsd.ups_status' 'line' %u %u\n",
+    printf("CHART 'upsd_%s.status' '' 'UPS status' 'status' 'ups' 'upsd.ups_status' 'line' %u %lu\n",
            clean_ups_name, NETDATA_CHART_PRIO_UPSD_UPS_STATUS, netdata_update_every);
 
     if ((nut_value = nut_get_var(&ups2, ups_name, "battery.type")))
@@ -613,7 +613,7 @@ static void register_ups(char *ups_name) {
         netdata_log_info("Collecting UPS '%s' NUT variable: %s", ups_name, chart->nut_variable);
 
         // CHART type.id name title units [family [context [charttype [priority [update_every [options [plugin [module]]]]]]]]
-        printf("CHART 'upsd_%s.%s' '' '%s' '%s' '%s' '%s' '%s' '%u' '%u' '' '" PLUGIN_UPSD_NAME "'\n",
+        printf("CHART 'upsd_%s.%s' '' '%s' '%s' '%s' '%s' '%s' '%u' '%lu' '' '" PLUGIN_UPSD_NAME "'\n",
                clean_ups_name, chart->chart_id, // type.id
                chart->chart_title,    // title
                chart->chart_units,    // units
