@@ -14,7 +14,8 @@ jobs:
       - name: install dependencies
         run: |
           sudo apt update -qq
-          sudo apt install -qq libupsclient-dev libcurl4-openssl-dev
+          sudo apt install -qq libupsclient-dev
+          sudo netdata-*/packaging/installer/install-required-packages.sh --dont-wait --non-interactive ubuntu netdata
       - name: build
         run: |
           cmake -B build
