@@ -1,6 +1,4 @@
-# netdata-plugin-upsd
-
-[![C/C++ CI](https://github.com/mario-campos/netdata-plugin-upsd/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/mario-campos/netdata-plugin-upsd/actions/workflows/c-cpp.yml)
+# netdata-plugin-upsd [![C/C++ CI](https://github.com/mario-campos/netdata-plugin-upsd/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/mario-campos/netdata-plugin-upsd/actions/workflows/c-cpp.yml)
 
 ### About
 
