@@ -1,0 +1,251 @@
+extends:
+  - _std-ups-mib.yaml
+  - tripplite.yaml
+
+sysobjectid:
+  - 1.3.6.1.4.1.850.1.1.3.1 #  tlpHardware.tlpDeviceTypes.tlpUps
+
+metadata:
+  device:
+    fields:
+      type:
+        value: "UPS"
+
+metric_tags:
+  - tag: tl_ups_ident_serial_num
+    OID: 1.3.6.1.4.1.850.100.1.1.2.0
+    symbol: tlUpsIdentSerialNum
+  - tag: tl_ups_ident_id
+    OID: 1.3.6.1.4.1.850.100.1.1.3.0
+    symbol: tlUpsIdentID
+  - OID: 1.3.6.1.4.1.850.100.1.1.4.0
+    symbol: _tlUpsSnmpCardSerialNum
+    tag: tl_ups_snmp_card_serial_num
+  - tag: tl_ups_location
+    OID: 1.3.6.1.4.1.850.100.1.1.6.0
+    symbol: tlUpsLocation
+
+# TRIPPLITE-12X
+# https://mibbrowser.online/mibdb_search.php?mib=TRIPPLITE-12X
+# https://github.com/DanielleHuisman/observium-community-edition/blob/main/mibs/tripplite/TRIPPLITE-12X
+
+metrics:
+  - MIB: TRIPPLITE-12X
+    symbol:
+      OID: 1.3.6.1.4.1.850.100.1.12.1.0
+      name: tlUpsMainOutletState
+      chart_meta:
+        description: The current state of the main output of the device
+        family: 'Hardware/Outlet/Main/Status'
+        unit: "{status}"
+      mapping:
+        0: unknown
+        1: off
+        2: on
+        3: mixed
+  - MIB: TRIPPLITE-12X
+    symbol:
+      OID: 1.3.6.1.4.1.850.100.1.13.1.0
+      name: tlUpsTemperature
+      chart_meta:
+        description: The ambient temperature
+        family: 'Environment/Temperature/Value'
+        unit: "Cel"
+  - MIB: TRIPPLITE-12X
+    symbol:
+      OID: 1.3.6.1.4.1.850.100.1.2.1.0
+      name: tlUpsBatteryAge # The age of the battery in years.
+      chart_meta:
+        description: The age of the battery in years
+        family: 'Hardware/Battery/Age/Internal'
+        unit: "{year}"
+  - MIB: TRIPPLITE-12X
+    symbol:
+      OID: 1.3.6.1.4.1.850.100.1.2.2.0
+      name: tlUpsTemperatureF
+      chart_meta:
+        description: The ambient temperature (F)
+        family: 'Environment/Temperature/Value'
+        unit: "degF"
+  - MIB: TRIPPLITE-12X
+    symbol:
+      OID: 1.3.6.1.4.1.850.100.1.2.3.0
+      name: tlUpsExternalBatteryAge # The age of the battery in years.
+      chart_meta:
+        description: The age of external battery in years
+        family: 'Hardware/Battery/Age/External'
+        unit: "{year}"
+  - MIB: TRIPPLITE-12X
+    symbol:
+      OID: 1.3.6.1.4.1.850.100.1.6.1.0
+      name: tlUpsAlarmsPresent
+      chart_meta:
+        description: The present number of active alarm conditions
+        family: 'System/Alarm/Active/Count'
+        unit: "{alarm}"
+  #  - MIB: TRIPPLITE-12X
+  #    symbol:
+  #      OID: 1.3.6.1.4.1.850.100.1.9.1.0
+  #      name: tlUpsConfigBattReplDate  # The date on which the battery was last replaced, in the format YYYYMMDD.
+  #    TODO: this is not a numerical value and possibly not suitable as global metric tags since it might have high cardinality
+  #  - MIB: TRIPPLITE-12X
+  #    symbol:
+  #      OID: 1.3.6.1.4.1.850.100.1.9.5.0
+  #      name: tlUpsConfigExternalBattReplDate  # The date on which the external battery was last replaced, in the format YYYYMMDD.
+  #    TODO: this is not a numerical value and possibly not suitable as global metric tags since it might have high cardinality
+  - MIB: TRIPPLITE-12X
+    symbol:
+      OID: 1.3.6.1.4.1.850.101.1.1.1.0
+      name: tlEnvTemperatureC
+      chart_meta:
+        description: The ambient temperature
+        family: 'Environment/Temperature/Value'
+        unit: "Cel"
+  - MIB: TRIPPLITE-12X
+    symbol:
+      OID: 1.3.6.1.4.1.850.101.1.1.2.0
+      name: tlEnvTemperatureF
+      chart_meta:
+        description: The ambient temperature
+        family: 'Environment/Temperature/Value'
+        unit: "degF"
+  - MIB: TRIPPLITE-12X
+    symbol:
+      OID: 1.3.6.1.4.1.850.101.1.1.5.0
+      name: tlEnvTemperatureInAlarm
+      chart_meta:
+        description: Indicates whether or not temperature is in alarm
+        family: 'Environment/Temperature/Alarm/Status'
+        unit: "{status}"
+      mapping:
+        true: 1
+        false: 2
+  - MIB: TRIPPLITE-12X
+    symbol:
+      OID: 1.3.6.1.4.1.850.101.1.2.1.0
+      name: tlEnvHumidity
+      chart_meta:
+        description: The ambient humidity
+        family: 'Environment/Humidity/Value'
+        unit: "%"
+  - MIB: TRIPPLITE-12X
+    symbol:
+      OID: 1.3.6.1.4.1.850.101.1.2.4.0
+      name: tlEnvHumidityInAlarm
+      chart_meta:
+        description: Indicates whether or not humidity is in alarm
+        family: 'Environment/Humidity/Alarm/Status'
+        unit: "{status}"
+      mapping:
+        true: 1
+        false: 2
+  - MIB: TRIPPLITE-12X
+    table:
+      OID: 1.3.6.1.4.1.850.100.1.3.2
+      name: tlUpsInputVoltageTable
+    symbols:
+      - OID: 1.3.6.1.4.1.850.100.1.3.2.1.3
+        name: tlUpsInputVoltage
+        chart_meta:
+          description: The magnitude of the present input voltage
+          family: 'PowerFlow/Input/Voltage/Value'
+          unit: "V"
+    metric_tags:
+      - tag: tl_ups_input_voltage_index
+        symbol:
+          OID: 1.3.6.1.4.1.850.100.1.3.2.1.1
+          name: tlUpsInputVoltageIndex
+      - tag: tl_ups_input_voltage_type
+        symbol:
+          OID: 1.3.6.1.4.1.850.100.1.3.2.1.2
+          name: tlUpsInputVoltageType
+        mapping:
+          0: phase_to_neutral
+          1: phase_to_phase
+  - MIB: TRIPPLITE-12X
+    table:
+      OID: 1.3.6.1.4.1.850.100.1.4.7
+      name: tlUpsOutputCircuitTable
+    symbols:
+      - OID: 1.3.6.1.4.1.850.100.1.4.7.1.3
+        name: tlUpsOutputCircuitLoadCurrent
+        chart_meta:
+          description: The magnitude of the present output current
+          family: 'PowerFlow/Output/Circuit/Current/Value'
+          unit: "A"
+        scale_factor: 0.1
+      - OID: 1.3.6.1.4.1.850.100.1.4.7.1.4
+        name: tlUpsOutputCircuitVoltage
+        chart_meta:
+          description: The magnitude of the present circuit voltage
+          family: 'PowerFlow/Output/Circuit/Voltage/Value'
+          unit: "V"
+        scale_factor: 0.1
+      - OID: 1.3.6.1.4.1.850.100.1.4.7.1.5
+        name: tlUpsOutputCircuitPower
+        chart_meta:
+          description: The magnitude of the present power in watts
+          family: 'PowerFlow/Output/Circuit/Active'
+          unit: "W"
+    metric_tags:
+      - tag: tl_ups_output_circuit_index
+        index: 1
+      - tag: _tl_ups_output_circuit_status
+        symbol:
+          OID: 1.3.6.1.4.1.850.100.1.4.7.1.2
+          name: tlUpsOutputCircuitStatus
+        mapping:
+          0: open
+          1: closed
+  - MIB: TRIPPLITE-12X
+    table:
+      OID: 1.3.6.1.4.1.850.101.2.1
+      name: tlEnvContactTable
+    symbols:
+      - OID: 1.3.6.1.4.1.850.101.2.1.1.3
+        name: tlEnvContactStatus
+        chart_meta:
+          description: The current status of the contact
+          family: 'Hardware/Sensor/Contact/Status'
+          unit: "{status}"
+        mapping:
+          0: normal
+          1: alarm
+    metric_tags:
+      - tag: tl_env_contact_name
+        symbol:
+          OID: 1.3.6.1.4.1.850.101.2.1.1.2
+          name: tlEnvContactName
+      - tag: _tl_env_contact_config
+        symbol:
+          OID: 1.3.6.1.4.1.850.101.2.1.1.4
+          name: tlEnvContactConfig
+        mapping:
+          0: normally_open
+          1: normally_closed
+
+  - MIB: TRIPPLITE-12X
+    table:
+      OID: 1.3.6.1.4.1.850.100.1.10.2
+      name: tlUpsOutletTable
+    symbols:
+      - OID: 1.3.6.1.4.1.850.100.1.11.2.1.5
+        name: tlUpsOutletGroupState
+        chart_meta:
+          description: The current state of the outlet group
+          family: 'Hardware/Outlet/Group/Status'
+          unit: "{status}"
+        mapping:
+          0: unknown
+          1: off
+          2: on
+          3: mixed
+    metric_tags:
+      - tag: tl_ups_outlet_group_name
+        symbol:
+          OID: 1.3.6.1.4.1.850.100.1.11.2.1.3
+          name: tlUpsOutletGroupName
+      - tag: tl_ups_outlet_group_desc
+        symbol:
+          OID: 1.3.6.1.4.1.850.100.1.11.2.1.4
+          name: tlUpsOutletGroupDesc

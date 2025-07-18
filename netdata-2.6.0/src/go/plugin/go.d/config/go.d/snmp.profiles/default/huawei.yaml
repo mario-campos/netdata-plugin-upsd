@@ -1,0 +1,304 @@
+extends:
+  - _huawei.yaml
+
+sysobjectid:
+  - 1.3.6.1.4.1.2011.2.*
+
+metric_tags:
+  - OID: 1.3.6.1.4.1.2011.5.25.31.6.5.0
+    symbol: hwEntitySystemModel
+    tag: huawei_hw_entity_system_model
+
+# - HUAWEI-ENTITY-EXTENT-MIB
+#     https://mibbrowser.online/mibdb_search.php?mib=HUAWEI-ENTITY-EXTENT-MIB
+#     https://github.com/DanielleHuisman/observium-community-edition/blob/main/mibs/huawei/HUAWEI-ENTITY-EXTENT-MIB
+# - HUAWEI-DEVICE-MIB
+#     https://mibbrowser.online/mibdb_search.php?mib=HUAWEI-DEVICE-MIB
+#     https://github.com/DanielleHuisman/observium-community-edition/blob/main/mibs/huawei/HUAWEI-DEVICE-MIB
+#  - HUAWEI-OSPFV2-MIB
+#     https://mibbrowser.online/mibdb_search.php?mib=HUAWEI-OSPFV2-MIB
+#     https://github.com/DanielleHuisman/observium-community-edition/blob/main/mibs/huawei/HUAWEI-OSPFV2-MIB
+
+metrics:
+  - MIB: HUAWEI-ENTITY-EXTENT-MIB
+    table:
+      name: hwEntityStateTable
+      OID: 1.3.6.1.4.1.2011.5.25.31.1.1.1
+    symbols:
+      #      - name: cpu.usage
+      #        OID: 1.3.6.1.4.1.2011.5.25.31.1.1.1.1.5
+      #        condition: hwEntityStandbyStatus=4
+      #      - name: memory.usage
+      #        OID: 1.3.6.1.4.1.2011.5.25.31.1.1.1.1.7
+      #        condition: hwEntityStandbyStatus=4
+      # TODO : Handle conditional metric collection NDM-2232
+      - name: huawei.hwEntityTemperature
+        OID: 1.3.6.1.4.1.2011.5.25.31.1.1.1.1.11
+        chart_meta:
+          description: The temperature for the entity
+          family: 'Hardware/Sensor/Temperature/Value'
+          unit: "Cel"
+      - name: huawei.hwEntityVoltage
+        OID: 1.3.6.1.4.1.2011.5.25.31.1.1.1.1.13
+        chart_meta:
+          description: The voltage for the entity
+          family: 'Hardware/Sensor/Voltage/Value'
+          unit: "V"
+      - OID: 1.3.6.1.4.1.2011.5.25.31.1.1.1.1.1
+        name: huawei.hwEntityAdminStatus
+        chart_meta:
+          description: Administrative status of the entity
+          family: 'Hardware/Module/Admin/Status'
+          unit: "{status}"
+        mapping:
+          1: not_supported
+          2: locked
+          3: shutting_down
+          4: unlocked
+          11: up
+          12: down
+          13: loopback
+      - OID: 1.3.6.1.4.1.2011.5.25.31.1.1.1.1.2
+        name: huawei.hwEntityOperStatus
+        chart_meta:
+          description: Operational status of the entity
+          family: 'Hardware/Module/Operational/Status'
+          unit: "{status}"
+        mapping:
+          1: not_supported
+          2: disabled
+          3: enabled
+          4: offline
+          11: up
+          12: down
+          13: connect
+          15: protocol_up
+          16: link_up
+          17: link_down
+          18: present
+          19: absent
+      - OID: 1.3.6.1.4.1.2011.5.25.31.1.1.1.1.3
+        name: huawei.hwEntityStandbyStatus
+        chart_meta:
+          description: Standby status of the entity
+          family: 'Hardware/Module/Standby/Status'
+          unit: "{status}"
+        mapping:
+          1: not_supported
+          2: hot_standby
+          3: cold_standby
+          4: providing_service
+      - OID: 1.3.6.1.4.1.2011.5.25.31.1.1.1.1.42
+        name: huawei.hwEntityFaultLight
+        chart_meta:
+          description: Fault light status of the entity
+          family: 'Hardware/Module/FaultLight/Status'
+          unit: "{status}"
+        mapping:
+          1: not_supported
+          2: normal
+          3: under_repair
+    metric_tags:
+      - tag: huawei_hw_entity_board_name
+        symbol:
+          name: huawei.hwEntityBoardName
+          OID: 1.3.6.1.4.1.2011.5.25.31.1.1.1.1.43
+
+  - MIB: HUAWEI-ENTITY-EXTENT-MIB
+    table:
+      name: hwFanStatusTable
+      OID: 1.3.6.1.4.1.2011.5.25.31.1.1.10
+    symbols:
+      - name: huawei.hwEntityFanSpeed
+        OID: 1.3.6.1.4.1.2011.5.25.31.1.1.10.1.5
+        chart_meta:
+          description: This object indicates the rotation speed in percentage of the full speed of the fan
+          family: 'Hardware/Fan/Speed'
+          unit: "%"
+      - OID: 1.3.6.1.4.1.2011.5.25.31.1.1.10.1.3
+        name: huawei.hwEntityFanReg
+        chart_meta:
+          description: Whether the fan is registered
+          family: 'Hardware/Fan/Registration/Status'
+          unit: "{status}"
+        mapping:
+          1: yes
+          2: no
+      - OID: 1.3.6.1.4.1.2011.5.25.31.1.1.10.1.4
+        name: huawei.hwEntityFanSpdAdjMode
+        chart_meta:
+          description: Fan speed adjustment mode
+          family: 'Hardware/Fan/Speed/Mode'
+          unit: "{status}"
+        mapping:
+          1: auto
+          2: manual
+          3: unknown
+          4: silent
+      - OID: 1.3.6.1.4.1.2011.5.25.31.1.1.10.1.6
+        name: huawei.hwEntityFanPresent
+        chart_meta:
+          description: Whether the fan is present
+          family: 'Hardware/Fan/Presence/Status'
+          unit: "{status}"
+        mapping:
+          1: present
+          2: absent
+      - OID: 1.3.6.1.4.1.2011.5.25.31.1.1.10.1.7
+        name: huawei.hwEntityFanState
+        chart_meta:
+          description: Operational state of the fan
+          family: 'Hardware/Fan/Status'
+          unit: "{status}"
+        mapping:
+          1: normal
+          2: abnormal
+    metric_tags:
+      - tag: huawei_hw_entity_fan_slot
+        symbol:
+          name: huawei.hwEntityFanSlot
+          OID: 1.3.6.1.4.1.2011.5.25.31.1.1.10.1.1
+      - tag: huawei_hw_entity_fan_sn
+        symbol:
+          name: huawei.hwEntityFanSn
+          OID: 1.3.6.1.4.1.2011.5.25.31.1.1.10.1.2
+
+  - MIB: HUAWEI-ENTITY-EXTENT-MIB
+    table:
+      name: hwSystemPowerTable
+      OID: 1.3.6.1.4.1.2011.5.25.31.1.1.14
+    symbols:
+      - name: huawei.hwSystemPowerTotalPower
+        OID: 1.3.6.1.4.1.2011.5.25.31.1.1.14.1.2
+        chart_meta:
+          description: Device total power
+          family: 'Hardware/Power/Capacity/Total'
+          unit: "W"
+      - name: huawei.hwSystemPowerUsedPower
+        OID: 1.3.6.1.4.1.2011.5.25.31.1.1.14.1.3
+        chart_meta:
+          description: Device used power
+          family: 'Hardware/Power/Usage'
+          unit: "W"
+      - name: huawei.hwSystemPowerRemainPower
+        OID: 1.3.6.1.4.1.2011.5.25.31.1.1.14.1.4
+        chart_meta:
+          description: Device remaining power
+          family: 'Hardware/Power/Capacity/Remaining'
+          unit: "W"
+    metric_tags:
+      - tag: huawei_hw_system_power_device_id
+        symbol:
+          name: huawei.hwSystemPowerDeviceID
+          OID: 1.3.6.1.4.1.2011.5.25.31.1.1.14.1.1
+
+  - MIB: HUAWEI-DEVICE-MIB
+    table:
+      name: hwCpuDevTable
+      OID: 1.3.6.1.4.1.2011.6.3.4
+    symbols:
+      - name: huawei.hwAvgDuty1min
+        OID: 1.3.6.1.4.1.2011.6.3.4.1.3
+        chart_meta:
+          description: The overall CPU duty percentage in the last 1 minute period
+          family: 'System/CPU/Usage'
+          unit: "%"
+    metric_tags:
+      - tag: cpu_index
+        index: 1
+
+  - MIB: HUAWEI-DEVICE-MIB
+    table:
+      name: hwMemoryDevTable
+      OID: 1.3.6.1.4.1.2011.6.3.5.1
+    symbols:
+      - name: huawei.hwMemoryDevSize
+        OID: 1.3.6.1.4.1.2011.6.3.5.1.1.2
+        metric_type: monotonic_count
+        chart_meta:
+          description: Indicates the total size of the memory module which is on the managed object
+          family: 'System/Memory/Total'
+          unit: "By"
+      - name: huawei.hwMemoryDevFree
+        OID: 1.3.6.1.4.1.2011.6.3.5.1.1.3
+        metric_type: monotonic_count
+        chart_meta:
+          description: Indicates the free size of the memory
+          family: 'System/Memory/Free'
+          unit: "By"
+    metric_tags:
+      - tag: mem_index
+        index: 1
+
+  #  - MIB: HUAWEI-OSPFV2-MIB
+  #    table:
+  #      name: hwOspfv2NeighborTable
+  #      OID: 1.3.6.1.4.1.2011.5.25.155.6
+  #    symbols:
+  #      - name: huawei.hwOspfv2NbrPriority
+  #        OID: 1.3.6.1.4.1.2011.5.25.155.6.1.12
+  #        description: Priority of this neighbor in the designated router election algorithm
+  #        unit: "{neighbor}"
+  #      - name: huawei.hwOspfv2NbrUpTime
+  #        OID: 1.3.6.1.4.1.2011.5.25.155.6.1.13
+  #        description: Time in seconds since the state of this neighbor has been full
+  #        unit: "s"
+  #      - name: huawei.hwOspfv2NbrDeadTimeLeft
+  #        OID: 1.3.6.1.4.1.2011.5.25.155.6.1.15
+  #        description: Period in seconds after which this neighbor is declared dead
+  #        unit: "s"
+  #    # TODO: Check out metric_tags with symbols having mappings and/or expressing states/statuses. Need to convert to metrics.
+  #    metric_tags:
+  #      - tag: huawei_hw_ospfv2_self_router_id
+  #        symbol:
+  #          name: huawei.hwOspfv2SelfRouterId
+  #          OID: 1.3.6.1.4.1.2011.5.25.155.6.1.3
+  #      - tag: huawei_hw_ospfv2_neighbor_router_id
+  #        symbol:
+  #          name: huawei.hwOspfv2NbrRouterId
+  #          OID: 1.3.6.1.4.1.2011.5.25.155.6.1.9
+  #      - tag: huawei_hw_ospfv2_self_if_ip_address
+  #      - symbol:
+  #          name: huawei.hwOspfv2SelfIfIpAddress
+  #          OID: 1.3.6.1.4.1.2011.5.25.155.6.1.4
+  #      - symbol:
+  #          name: huawei.hwOspfv2SelfIfName
+  #          OID: 1.3.6.1.4.1.2011.5.25.155.6.1.5
+  #        tag: huawei_hw_ospfv2_self_if_name
+  #      - symbol:
+  #          name: huawei.hwOspfv2NbrIfDesignatedRouter
+  #          OID: 1.3.6.1.4.1.2011.5.25.155.6.1.6
+  #        tag: huawei_hw_ospfv2_nbr_if_designated_router
+  #      - symbol:
+  #          name: huawei.hwOspfv2NbrIfBackupDesignatedRouter
+  #          OID: 1.3.6.1.4.1.2011.5.25.155.6.1.7
+  #        tag: huawei_hw_ospfv2_nbr_if_backup_designated_router
+  #      - symbol:
+  #          OID: 1.3.6.1.4.1.2011.5.25.155.6.1.10
+  #          name: huawei.hwOspfv2NbrState
+  #        tag: huawei_hw_ospfv2_nbr_state
+  #        mapping:
+  #          1: down
+  #          2: attempt
+  #          3: init
+  #          4: two_way
+  #          5: exchange_start
+  #          6: exchange
+  #          7: loading
+  #          8: full
+  #      - symbol:
+  #          OID: 1.3.6.1.4.1.2011.5.25.155.6.1.11
+  #          name: huawei.hwOspfv2NbrMode
+  #        tag: huawei_hw_ospfv2_nbr_mode
+  #        mapping:
+  #          1: master
+  #          2: slave
+  #      - symbol:
+  #          OID: 1.3.6.1.4.1.2011.5.25.155.6.1.16
+  #          name: huawei.hwOspfv2NbrGrStatus
+  #        tag: huawei_hw_ospfv2_nbr_gr_status
+  #        mapping:
+  #          1: normal
+  #          2: doing_gr
+  #          3: helper
+  #          4: notsupport

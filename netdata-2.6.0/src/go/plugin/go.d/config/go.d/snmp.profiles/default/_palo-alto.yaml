@@ -1,0 +1,8 @@
+extends:
+  - _system-base.yaml
+
+metadata:
+  device:
+    fields:
+      vendor:
+        value: "Palo Alto Networks"

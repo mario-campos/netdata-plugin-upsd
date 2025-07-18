@@ -1,0 +1,592 @@
+extends:
+  - _system-base.yaml
+
+sysobjectid: 1.3.6.1.4.1.534.6.6.7 # eatonEpdu
+
+metadata:
+  device:
+    fields:
+      vendor:
+        value: "eaton"
+      type:
+        value: "PDU"
+
+# https://mibbrowser.online/mibdb_search.php?mib=EATON-EPDU-MIB
+# https://github.com/librenms/librenms/blob/master/mibs/eaton/EATON-EPDU-MIB
+
+metrics:
+  - MIB: EATON-EPDU-MIB
+    symbol:
+      name: eaton.epdu.communicationStatus
+      OID: 1.3.6.1.4.1.534.6.6.7.1.2.1.30.0
+      chart_meta:
+        description: Status of the internal communication with the PDU
+        family: 'Hardware/PDU/Communication/Status'
+        unit: "{status}"
+      mapping:
+        0: good
+        1: communicationLost
+  - MIB: EATON-EPDU-MIB
+    symbol:
+      name: eaton.epdu.internalStatus
+      OID: 1.3.6.1.4.1.534.6.6.7.1.2.1.31.0
+      chart_meta:
+        description: Status of the internal failure inside the PDU
+        family: 'Hardware/PDU/Internal/Status'
+        unit: "{status}"
+      mapping:
+        0: good
+        1: internalFailure
+  - MIB: EATON-EPDU-MIB
+    symbol:
+      name: eaton.epdu.strappingStatus
+      OID: 1.3.6.1.4.1.534.6.6.7.1.2.1.32.0
+      chart_meta:
+        description: Status of the external communication with a strapping unit
+        family: 'Hardware/PDU/Strapping/Status'
+        unit: "{status}"
+      mapping:
+        0: good
+        1: communicationLost
+
+  - MIB: EATON-EPDU-MIB
+    table:
+      name: inputTable
+      OID: 1.3.6.1.4.1.534.6.6.7.3.1
+    symbols:
+      - name: eaton.epdu.inputFrequency
+        OID: 1.3.6.1.4.1.534.6.6.7.3.1.1.3
+        chart_meta:
+          description: Units are 0.1 Hz; divide by ten to get Hz
+          family: 'PowerFlow/Input/Frequency/Value'
+          unit: "Hz"
+      - OID: 1.3.6.1.4.1.534.6.6.7.3.1.1.4
+        name: eaton.epdu.inputFrequencyStatus
+        chart_meta:
+          description: Status of the measured input frequency relative to the nominal frequency and the admitted tolerance
+          family: 'PowerFlow/Input/Frequency/Status'
+          unit: "{status}"
+        mapping:
+          0: good
+          1: outOfRange
+    metric_tags:
+      - tag: eaton_epdu_input_index
+        index: 1
+      - tag: eaton_epdu_input_feed_name
+        symbol:
+          OID: 1.3.6.1.4.1.534.6.6.7.3.1.1.10
+          name: eaton.epdu.inputFeedName
+
+  - MIB: EATON-EPDU-MIB
+    table:
+      name: inputVoltageTable
+      OID: 1.3.6.1.4.1.534.6.6.7.3.2
+    symbols:
+      - name: eaton.epdu.inputVoltage
+        OID: 1.3.6.1.4.1.534.6.6.7.3.2.1.3
+        chart_meta:
+          description: An input voltage measurement value
+          family: 'PowerFlow/Input/Voltage/Value'
+          unit: "mV"
+      - OID: 1.3.6.1.4.1.534.6.6.7.3.2.1.4
+        name: eaton.epdu.inputVoltageThStatus
+        chart_meta:
+          description: Status of the measured input voltage relative to the configured thresholds
+          family: 'PowerFlow/Input/Voltage/Threshold/Status'
+          unit: "{status}"
+        mapping:
+          0: good
+          1: lowWarning
+          2: lowCritical
+          3: highWarning
+          4: highCritical
+    metric_tags:
+      - tag: eaton_epdu_input_index
+        index: 1
+      - tag: eaton_epdu_input_description
+        table: inputCurrentTable
+        symbol:
+          OID: 1.3.6.1.4.1.534.6.6.7.3.3.1.12
+          name: eaton.epdu.inputPhaseDesignator
+
+  - MIB: EATON-EPDU-MIB
+    table:
+      name: inputCurrentTable
+      OID: 1.3.6.1.4.1.534.6.6.7.3.3
+    symbols:
+      - name: eaton.epdu.inputCurrent
+        OID: 1.3.6.1.4.1.534.6.6.7.3.3.1.4
+        chart_meta:
+          description: An input current measurement value
+          family: 'PowerFlow/Input/Current/Value'
+          unit: "mA"
+      - name: eaton.epdu.inputCurrentPercentLoad
+        OID: 1.3.6.1.4.1.534.6.6.7.3.3.1.11
+        chart_meta:
+          description: Current percent load based on the rated current capacity
+          family: 'PowerFlow/Input/Current/Load'
+          unit: "%"
+      - OID: 1.3.6.1.4.1.534.6.6.7.3.3.1.5
+        name: eaton.epdu.inputCurrentThStatus
+        chart_meta:
+          description: Status of the measured input current relative to the configured thresholds
+          family: 'PowerFlow/Input/Current/Threshold/Status'
+          unit: "{status}"
+        mapping:
+          0: good
+          1: lowWarning
+          2: lowCritical
+          3: highWarning
+          4: highCritical
+    metric_tags:
+      - tag: eaton_epdu_input_index
+        index: 1
+      - tag: eaton_epdu_input_description
+        symbol:
+          OID: 1.3.6.1.4.1.534.6.6.7.3.3.1.12
+          name: eaton.epdu.inputPhaseDesignator
+
+  - MIB: EATON-EPDU-MIB
+    table:
+      name: inputPowerTable
+      OID: 1.3.6.1.4.1.534.6.6.7.3.4
+    symbols:
+      - name: eaton.epdu.inputVA
+        OID: 1.3.6.1.4.1.534.6.6.7.3.4.1.3
+        chart_meta:
+          description: An input VA value
+          family: 'PowerFlow/Input/Apparent'
+          unit: "VA"
+      - name: eaton.epdu.inputWatts
+        OID: 1.3.6.1.4.1.534.6.6.7.3.4.1.4
+        chart_meta:
+          description: An input Watts value
+          family: 'PowerFlow/Input/Active'
+          unit: "W"
+    metric_tags:
+      - tag: eaton_epdu_input_index
+        index: 1
+      - tag: eaton_epdu_input_description
+        table: inputCurrentTable
+        symbol:
+          OID: 1.3.6.1.4.1.534.6.6.7.3.3.1.12
+          name: eaton.epdu.inputPhaseDesignator
+
+  - MIB: EATON-EPDU-MIB
+    table:
+      name: groupTable
+      OID: 1.3.6.1.4.1.534.6.6.7.5.1
+    symbols:
+      - OID: 1.3.6.1.4.1.534.6.6.7.5.1.1.5
+        name: eaton.epdu.groupBreakerStatus
+        chart_meta:
+          description: Indicates whether a breaker is turned off or on
+          family: 'Hardware/Breaker/Status'
+          unit: "{status}"
+        mapping:
+          0: notApplicable
+          1: breakerOn
+          2: breakerOff
+    metric_tags:
+      - tag: eaton_epdu_group_index
+        index: 1
+      - tag: eaton_epdu_group_name
+        symbol:
+          OID: 1.3.6.1.4.1.534.6.6.7.5.1.1.3
+          name: eaton.epdu.groupName
+      - tag: eaton_epdu_group_type
+        symbol:
+          OID: 1.3.6.1.4.1.534.6.6.7.5.1.1.4
+          name: eaton.epdu.groupType
+        mapping:
+          0: unknown
+          1: breaker1pole
+          2: breaker2pole
+          3: breaker3pole
+          4: outlet_section
+          5: user_defined
+
+  - MIB: EATON-EPDU-MIB
+    table:
+      name: groupVoltageTable
+      OID: 1.3.6.1.4.1.534.6.6.7.5.3
+    symbols:
+      - name: eaton.epdu.groupVoltage
+        OID: 1.3.6.1.4.1.534.6.6.7.5.3.1.3
+        chart_meta:
+          description: Units are millivolts
+          family: 'PowerFlow/Group/Voltage/Value'
+          unit: "mV"
+      - OID: 1.3.6.1.4.1.534.6.6.7.5.3.1.4
+        name: eaton.epdu.groupVoltageThStatus
+        chart_meta:
+          description: Status of the measured group voltage relative to the configured thresholds
+          family: 'PowerFlow/Group/Voltage/Threshold/Status'
+          unit: "{status}"
+        mapping:
+          0: good
+          1: lowWarning
+          2: lowCritical
+          3: highWarning
+          4: highCritical
+    metric_tags:
+      - tag: eaton_epdu_group_index
+        index: 1
+      - tag: eaton_epdu_group_name
+        table: groupTable
+        symbol:
+          OID: 1.3.6.1.4.1.534.6.6.7.5.1.1.3
+          name: eaton.epdu.groupName
+      - tag: eaton_epdu_group_type
+        table: groupTable
+        symbol:
+          OID: 1.3.6.1.4.1.534.6.6.7.5.1.1.4
+          name: eaton.epdu.groupType
+        mapping:
+          0: unknown
+          1: breaker1pole
+          2: breaker2pole
+          3: breaker3pole
+          4: outlet_section
+          5: user_defined
+
+  - MIB: EATON-EPDU-MIB
+    table:
+      name: groupCurrentTable
+      OID: 1.3.6.1.4.1.534.6.6.7.5.4
+    symbols:
+      - name: eaton.epdu.groupCurrent
+        OID: 1.3.6.1.4.1.534.6.6.7.5.4.1.3
+        chart_meta:
+          description: A group current measurement value
+          family: 'PowerFlow/Group/Current/Value'
+          unit: "mA"
+      - name: eaton.epdu.groupCurrentPercentLoad
+        OID: 1.3.6.1.4.1.534.6.6.7.5.4.1.10
+        chart_meta:
+          description: Current percent load based on the rated current capacity
+          family: 'PowerFlow/Group/Current/Load'
+          unit: "%"
+      - OID: 1.3.6.1.4.1.534.6.6.7.5.4.1.4
+        name: eaton.epdu.groupCurrentThStatus
+        chart_meta:
+          description: Status of the measured group current relative to the configured thresholds
+          family: 'PowerFlow/Group/Current/Threshold/Status'
+          unit: "{status}"
+        mapping:
+          0: good
+          1: lowWarning
+          2: lowCritical
+          3: highWarning
+          4: highCritical
+    metric_tags:
+      - tag: eaton_epdu_group_index
+        index: 1
+      - tag: eaton_epdu_group_name
+        table: groupTable
+        symbol:
+          OID: 1.3.6.1.4.1.534.6.6.7.5.1.1.3
+          name: eaton.epdu.groupName
+      - tag: eaton_epdu_group_type
+        table: groupTable
+        symbol:
+          OID: 1.3.6.1.4.1.534.6.6.7.5.1.1.4
+          name: eaton.epdu.groupType
+        mapping:
+          0: unknown
+          1: breaker1pole
+          2: breaker2pole
+          3: breaker3pole
+          4: outlet_section
+          5: user_defined
+
+  - MIB: EATON-EPDU-MIB
+    table:
+      name: groupPowerTable
+      OID: 1.3.6.1.4.1.534.6.6.7.5.5
+    symbols:
+      - name: eaton.epdu.groupVA
+        OID: 1.3.6.1.4.1.534.6.6.7.5.5.1.2
+        chart_meta:
+          description: A group VA value
+          family: 'PowerFlow/Group/Apparent'
+          unit: "VA"
+      - name: eaton.epdu.groupWatts
+        OID: 1.3.6.1.4.1.534.6.6.7.5.5.1.3
+        chart_meta:
+          description: A group Watts value
+          family: 'PowerFlow/Group/Active'
+          unit: "W"
+    metric_tags:
+      - tag: eaton_epdu_group_index
+        index: 1
+      - tag: eaton_epdu_group_name
+        table: groupTable
+        symbol:
+          OID: 1.3.6.1.4.1.534.6.6.7.5.1.1.3
+          name: eaton.epdu.groupName
+      - tag: eaton_epdu_group_type
+        table: groupTable
+        symbol:
+          OID: 1.3.6.1.4.1.534.6.6.7.5.1.1.4
+          name: eaton.epdu.groupType
+        mapping:
+          0: unknown
+          1: breaker1pole
+          2: breaker2pole
+          3: breaker3pole
+          4: outlet_section
+          5: user_defined
+
+  - MIB: EATON-EPDU-MIB
+    table:
+      name: groupControlTable
+      OID: 1.3.6.1.4.1.534.6.6.7.5.6
+    symbols:
+      - OID: 1.3.6.1.4.1.534.6.6.7.5.6.1.2
+        name: eaton.epdu.groupControlStatus
+        chart_meta:
+          description: Current state of a controlled group
+          family: 'Hardware/Group/Control/Status'
+          unit: "{status}"
+        mapping:
+          0: off
+          1: on
+          2: rebooting
+          3: mixed
+    metric_tags:
+      - tag: eaton_epdu_group_index
+        index: 1
+      - tag: eaton_epdu_group_name
+        table: groupTable
+        symbol:
+          OID: 1.3.6.1.4.1.534.6.6.7.5.1.1.3
+          name: eaton.epdu.groupName
+      - tag: eaton_epdu_group_type
+        table: groupTable
+        symbol:
+          OID: 1.3.6.1.4.1.534.6.6.7.5.1.1.4
+          name: eaton.epdu.groupType
+        mapping:
+          0: unknown
+          1: breaker1pole
+          2: breaker2pole
+          3: breaker3pole
+          4: outlet_section
+          5: user_defined
+
+  - MIB: EATON-EPDU-MIB
+    table:
+      name: outletVoltageTable
+      OID: 1.3.6.1.4.1.534.6.6.7.6.3
+    symbols:
+      - name: eaton.epdu.outletVoltage
+        OID: 1.3.6.1.4.1.534.6.6.7.6.3.1.2
+        chart_meta:
+          description: Units are millivolts
+          family: 'PowerFlow/Outlet/Voltage/Value'
+          unit: "mV"
+      - OID: 1.3.6.1.4.1.534.6.6.7.6.3.1.3
+        name: eaton.epdu.outletVoltageThStatus
+        chart_meta:
+          description: Status of the measured outlet voltage relative to the configured thresholds
+          family: 'PowerFlow/Outlet/Voltage/Threshold/Status'
+          unit: "{status}"
+        mapping:
+          0: good
+          1: lowWarning
+          2: lowCritical
+          3: highWarning
+          4: highCritical
+    metric_tags:
+      - tag: eaton_epdu_outlet_index
+        index: 1
+      - tag: eaton_epdu_outlet_name
+        table: outletTable
+        symbol:
+          OID: 1.3.6.1.4.1.534.6.6.7.6.1.1.3
+          name: eaton.epdu.outletName
+
+  - MIB: EATON-EPDU-MIB
+    table:
+      name: outletCurrentTable
+      OID: 1.3.6.1.4.1.534.6.6.7.6.4
+    symbols:
+      - name: eaton.epdu.outletCurrent
+        OID: 1.3.6.1.4.1.534.6.6.7.6.4.1.3
+        chart_meta:
+          description: An outlet current measurement value
+          family: 'PowerFlow/Outlet/Current/Value'
+          unit: "mA"
+      - name: eaton.epdu.outletCurrentPercentLoad
+        OID: 1.3.6.1.4.1.534.6.6.7.6.4.1.10
+        chart_meta:
+          description: Current percent load based on the rated current capacity
+          family: 'PowerFlow/Outlet/Current/Load'
+          unit: "%"
+      - OID: 1.3.6.1.4.1.534.6.6.7.6.4.1.4
+        name: eaton.epdu.outletCurrentThStatus
+        chart_meta:
+          description: Status of the measured outlet current relative to the configured thresholds
+          family: 'PowerFlow/Outlet/Current/Threshold/Status'
+          unit: "{status}"
+        mapping:
+          0: good
+          1: lowWarning
+          2: lowCritical
+          3: highWarning
+          4: highCritical
+    metric_tags:
+      - tag: eaton_epdu_outlet_index
+        index: 1
+      - tag: eaton_epdu_outlet_name
+        table: outletTable
+        symbol:
+          OID: 1.3.6.1.4.1.534.6.6.7.6.1.1.3
+          name: eaton.epdu.outletName
+
+  - MIB: EATON-EPDU-MIB
+    table:
+      name: outletPowerTable
+      OID: 1.3.6.1.4.1.534.6.6.7.6.5
+    symbols:
+      - name: eaton.epdu.outletVA
+        OID: 1.3.6.1.4.1.534.6.6.7.6.5.1.2
+        chart_meta:
+          description: An outlet VA value
+          family: 'PowerFlow/Outlet/Apparent'
+          unit: "VA"
+      - name: eaton.epdu.outletWatts
+        OID: 1.3.6.1.4.1.534.6.6.7.6.5.1.3
+        chart_meta:
+          description: An outlet Watts value
+          family: 'PowerFlow/Outlet/Active'
+          unit: "W"
+    metric_tags:
+      - tag: eaton_epdu_outlet_index
+        index: 1
+      - tag: eaton_epdu_outlet_name
+        table: outletTable
+        symbol:
+          OID: 1.3.6.1.4.1.534.6.6.7.6.1.1.3
+          name: eaton.epdu.outletName
+
+  - MIB: EATON-EPDU-MIB
+    table:
+      name: temperatureTable
+      OID: 1.3.6.1.4.1.534.6.6.7.7.1
+    symbols:
+      - name: eaton.epdu.temperatureValue
+        # TODO: Units depends on temperatureScale (either Fahrenheit or Celsius)
+        # 1.3.6.1.4.1.534.6.6.7.1.2.1.9
+        # Scale used to return temperature objects. Enumeration: 'fahrenheit': 1, 'celsius': 0
+        OID: 1.3.6.1.4.1.534.6.6.7.7.1.1.4
+        scale_factor: 0.1
+        chart_meta:
+          description: Temperature value
+          family: 'Hardware/Sensor/Temperature/Value'
+          unit: "Cel"
+      - OID: 1.3.6.1.4.1.534.6.6.7.7.1.1.3
+        name: eaton.epdu.temperatureProbeStatus
+        chart_meta:
+          description: Indicates whether a probe is connected or not
+          family: 'Hardware/Sensor/Temperature/Probe/Status'
+          unit: "{status}"
+        mapping:
+          -1: bad
+          0: disconnected
+          1: connected
+      - OID: 1.3.6.1.4.1.534.6.6.7.7.1.1.5
+        name: eaton.epdu.temperatureThStatus
+        chart_meta:
+          description: Status of the measured temperature relative to the configured thresholds
+          family: 'Hardware/Sensor/Temperature/Threshold/Status'
+          unit: "{status}"
+        mapping:
+          0: good
+          1: lowWarning
+          2: lowCritical
+          3: highWarning
+          4: highCritical
+    metric_tags:
+      - tag: eaton_epdu_temperature_index
+        index: 1
+      - tag: eaton_epdu_temperature_name
+        symbol:
+          OID: 1.3.6.1.4.1.534.6.6.7.7.1.1.2
+          name: eaton.epdu.temperatureName
+
+  - MIB: EATON-EPDU-MIB
+    table:
+      name: humidityTable
+      OID: 1.3.6.1.4.1.534.6.6.7.7.2
+    symbols:
+      - name: eaton.epdu.humidityValue
+        OID: 1.3.6.1.4.1.534.6.6.7.7.2.1.4
+        chart_meta:
+          description: Units are tenths of a percent relative humidity Divide the value by 10 to get %RH
+          family: 'Hardware/Sensor/Humidity/Value'
+          unit: "%"
+      - OID: 1.3.6.1.4.1.534.6.6.7.7.2.1.3
+        name: eaton.epdu.humidityProbeStatus
+        chart_meta:
+          description: Indicates whether a probe is connected or not
+          family: 'Hardware/Sensor/Humidity/Probe/Status'
+          unit: "{status}"
+        mapping:
+          -1: bad
+          0: disconnected
+          1: connected
+      - OID: 1.3.6.1.4.1.534.6.6.7.7.2.1.5
+        name: eaton.epdu.humidityThStatus
+        chart_meta:
+          description: Status of the measured humidity relative to the configured thresholds
+          family: 'Hardware/Sensor/Humidity/Threshold/Status'
+          unit: "{status}"
+        mapping:
+          0: good
+          1: lowWarning
+          2: lowCritical
+          3: highWarning
+          4: highCritical
+    metric_tags:
+      - tag: eaton_epdu_humidity_index
+        index: 1
+      - tag: eaton_epdu_humidity_name
+        table: humidityTable
+        symbol:
+          OID: 1.3.6.1.4.1.534.6.6.7.7.2.1.2
+          name: eaton.epdu.humidityName
+
+  - MIB: EATON-EPDU-MIB
+    table:
+      name: contactTable
+      OID: 1.3.6.1.4.1.534.6.6.7.7.3
+    symbols:
+      - OID: 1.3.6.1.4.1.534.6.6.7.7.3.1.3
+        name: eaton.epdu.contactProbeStatus
+        chart_meta:
+          description: Indicates whether a probe is connected or not
+          family: 'Hardware/Sensor/Contact/Probe/Status'
+          unit: "{status}"
+        mapping:
+          -1: bad
+          0: disconnected
+          1: connected
+      - OID: 1.3.6.1.4.1.534.6.6.7.7.3.1.4
+        name: eaton.epdu.contactState
+        chart_meta:
+          description: The state of the contact sensor
+          family: 'Hardware/Sensor/Contact/Status'
+          unit: "{status}"
+        mapping:
+          -1: contactBad
+          0: contactOpen
+          1: contactClosed
+    metric_tags:
+      - tag: eaton_epdu_contact_index
+        index: 1
+      - tag: eaton_epdu_contact_name
+        symbol:
+          OID: 1.3.6.1.4.1.534.6.6.7.7.3.1.2
+          name: eaton.epdu.contactName

@@ -1,0 +1,11 @@
+extends:
+  - _system-base.yaml
+
+metadata:
+  device:
+    fields:
+      vendor:
+        value: "Tripp Lite"
+
+sysobjectid:
+  - 1.3.6.1.4.1.850.1.* # tlpProducts: all tripplite products

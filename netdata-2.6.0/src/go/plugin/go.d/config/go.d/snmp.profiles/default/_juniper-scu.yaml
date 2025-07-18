@@ -1,0 +1,33 @@
+# Statistics for traffic that satisfies the rules in each configured Source Class
+
+metrics:
+  - MIB: JUNIPER-SCU-MIB
+    table:
+      OID: 1.3.6.1.4.1.2636.3.16.1.1
+      name: jnxScuStatsTable
+    symbols:
+      - OID: 1.3.6.1.4.1.2636.3.16.1.1.1.4
+        name: jnxScuStatsPackets
+        chart_meta:
+          description: Number of packets sent out of destination interface that match the source class and address family
+          family: 'Network/Interface/SCU/Packet/Out'
+          unit: "{packet}/s"
+      - OID: 1.3.6.1.4.1.2636.3.16.1.1.1.5
+        name: jnxScuStatsBytes
+        chart_meta:
+          description: Number of bytes sent out of destination interface that match the source class and address family
+          family: 'Network/Interface/SCU/Traffic/Out'
+          unit: "By/s"
+    metric_tags:
+      - tag: interface
+        table: ifXTable
+        symbol:
+          OID: 1.3.6.1.2.1.31.1.1.1.1
+          name: ifName
+        index_transform:
+          - start: 0
+            end: 0
+      - tag: address_family
+        symbol:
+          OID: 1.3.6.1.4.1.2636.3.16.1.1.1.2
+          name: jnxScuStatsAddrFamily

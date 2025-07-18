@@ -1,0 +1,897 @@
+extends:
+  - servertech.yaml
+
+sysobjectid:
+  - 1.3.6.1.4.1.1718.4  # Sentry 4th Gen PDU
+
+metadata:
+  device:
+    fields:
+      type:
+        value: "PDU"
+
+# SENTRY4-MIB
+# https://mibbrowser.online/mibdb_search.php?mib=SENTRY4-MIB
+# https://github.com/DanielleHuisman/observium-community-edition/blob/main/mibs/sentry/Sentry4-MIB
+
+metrics:
+  - MIB: SENTRY4-MIB
+    table:
+      name: servertech.sentry4.st4UnitMonitorTable
+      OID: 1.3.6.1.4.1.1718.4.1.2
+    symbols:
+      - name: servertech.sentry4.st4UnitStatus
+        OID: 1.3.6.1.4.1.1718.4.1.2.3.1.1
+        chart_meta:
+          description: Unit operational status
+          family: 'Hardware/Unit/Status'
+          unit: "{status}"
+        mapping:
+          0: normal
+          1: disabled
+          2: purged
+          5: reading
+          6: settle
+          7: not_found
+          8: lost
+          9: read_error
+          10: no_comm
+          11: pwr_error
+          12: breaker_tripped
+          13: fuse_blown
+          14: low_alarm
+          15: low_warning
+          16: high_warning
+          17: high_alarm
+          18: alarm
+          19: under_limit
+          20: over_limit
+          21: nvm_fail
+          22: profile_error
+          23: conflict
+    metric_tags:
+      - tag: servertech_sentry4_st4_unit_id
+        symbol:
+          name: servertech.sentry4.st4UnitID
+          OID: 1.3.6.1.4.1.1718.4.1.2.2.1.2
+      - tag: servertech_sentry4_st4_unit_name
+        symbol:
+          name: servertech.sentry4.st4UnitName
+          OID: 1.3.6.1.4.1.1718.4.1.2.2.1.3
+      - tag: _servertech_sentry4_st4_unit_product_sn
+        symbol:
+          name: servertech.sentry4.st4UnitProductSN
+          OID: 1.3.6.1.4.1.1718.4.1.2.2.1.4
+      - tag: _servertech_sentry4_st4_unit_model
+        symbol:
+          name: servertech.sentry4.st4UnitModel
+          OID: 1.3.6.1.4.1.1718.4.1.2.2.1.5
+      - tag: _servertech_sentry4_st4_unit_asset_tag
+        symbol:
+          name: servertech.sentry4.st4UnitAssetTag
+          OID: 1.3.6.1.4.1.1718.4.1.2.2.1.6
+      - tag: servertech_sentry4_st4_unit_type
+        symbol:
+          name: servertech.sentry4.st4UnitType
+          OID: 1.3.6.1.4.1.1718.4.1.2.2.1.7
+        mapping:
+          0: master_pdu
+          1: link_pdu
+          2: controller
+          3: emcu
+
+  - MIB: SENTRY4-MIB
+    table:
+      name: servertech.sentry4.st4InputCordMonitorTable
+      OID: 1.3.6.1.4.1.1718.4.1.3
+    symbols:
+      - name: servertech.sentry4.st4InputCordActivePower
+        OID: 1.3.6.1.4.1.1718.4.1.3.3.1.3
+        chart_meta:
+          description: Active power of the input cord
+          family: 'PowerFlow/InputCord/Active'
+          unit: "W"
+      - name: servertech.sentry4.st4InputCordApparentPower
+        OID: 1.3.6.1.4.1.1718.4.1.3.3.1.5
+        chart_meta:
+          description: Apparent power of the input cord
+          family: 'PowerFlow/InputCord/Apparent'
+          unit: "VA"
+      - name: servertech.sentry4.st4InputCordPowerUtilized
+        OID: 1.3.6.1.4.1.1718.4.1.3.3.1.7
+        chart_meta:
+          description: Power utilized by the input cord
+          family: 'PowerFlow/InputCord/Utilized'
+          unit: "W"
+      - name: servertech.sentry4.st4InputCordPowerFactor
+        OID: 1.3.6.1.4.1.1718.4.1.3.3.1.8
+        chart_meta:
+          description: Power factor of the input cord
+          family: 'PowerFlow/InputCord/Factor'
+          unit: "10*2.1"
+      - name: servertech.sentry4.st4InputCordEnergy
+        OID: 1.3.6.1.4.1.1718.4.1.3.3.1.10
+        chart_meta:
+          description: Energy consumed by the input cord
+          family: 'PowerFlow/InputCord/Energy/Total'
+          unit: "Wh"
+      - name: servertech.sentry4.st4InputCordFrequency
+        OID: 1.3.6.1.4.1.1718.4.1.3.3.1.11
+        chart_meta:
+          description: Frequency of the input cord
+          family: 'PowerFlow/InputCord/Frequency'
+          unit: "Hz"
+      - name: servertech.sentry4.st4InputCordOutOfBalance
+        OID: 1.3.6.1.4.1.1718.4.1.3.3.1.12
+        chart_meta:
+          description: Out of balance measurement of the input cord
+          family: 'PowerFlow/InputCord/Balance/Deviation'
+          unit: "%"
+      - OID: 1.3.6.1.4.1.1718.4.1.3.3.1.1
+        name: servertech.sentry4.st4InputCordState
+        chart_meta:
+          description: Input cord power state
+          family: 'Hardware/InputCord/Power/State'
+          unit: "{status}"
+        mapping:
+          0: unknown
+          1: on
+          2: off
+      - OID: 1.3.6.1.4.1.1718.4.1.3.3.1.2
+        name: servertech.sentry4.st4InputCordStatus
+        chart_meta:
+          description: Input cord operational status
+          family: 'Hardware/InputCord/Status'
+          unit: "{status}"
+        mapping:
+          0: normal
+          1: disabled
+          2: purged
+          5: reading
+          6: settle
+          7: not_found
+          8: lost
+          9: read_error
+          10: no_comm
+          11: pwr_error
+          12: breaker_tripped
+          13: fuse_blown
+          14: low_alarm
+          15: low_warning
+          16: high_warning
+          17: high_alarm
+          18: alarm
+          19: under_limit
+          20: over_limit
+          21: nvm_fail
+          22: profile_error
+          23: conflict
+      - OID: 1.3.6.1.4.1.1718.4.1.3.3.1.4
+        name: servertech.sentry4.st4InputCordActivePowerStatus
+        chart_meta:
+          description: Input cord active power status
+          family: 'PowerFlow/InputCord/Active/Status'
+          unit: "{status}"
+        mapping:
+          0: normal
+          1: disabled
+          2: purged
+          5: reading
+          6: settle
+          7: not_found
+          8: lost
+          9: read_error
+          10: no_comm
+          11: pwr_error
+          12: breaker_tripped
+          13: fuse_blown
+          14: low_alarm
+          15: low_warning
+          16: high_warning
+          17: high_alarm
+          18: alarm
+          19: under_limit
+          20: over_limit
+          21: nvm_fail
+          22: profile_error
+          23: conflict
+      - OID: 1.3.6.1.4.1.1718.4.1.3.3.1.6
+        name: servertech.sentry4.st4InputCordApparentPowerStatus
+        chart_meta:
+          description: Input cord apparent power status
+          family: 'PowerFlow/InputCord/Apparent/Status'
+          unit: "{status}"
+        mapping:
+          0: normal
+          1: disabled
+          2: purged
+          5: reading
+          6: settle
+          7: not_found
+          8: lost
+          9: read_error
+          10: no_comm
+          11: pwr_error
+          12: breaker_tripped
+          13: fuse_blown
+          14: low_alarm
+          15: low_warning
+          16: high_warning
+          17: high_alarm
+          18: alarm
+          19: under_limit
+          20: over_limit
+          21: nvm_fail
+          22: profile_error
+          23: conflict
+      - OID: 1.3.6.1.4.1.1718.4.1.3.3.1.9
+        name: servertech.sentry4.st4InputCordPowerFactorStatus
+        chart_meta:
+          description: Input cord power factor status
+          family: 'PowerFlow/InputCord/Factor/Status'
+          unit: "{status}"
+        mapping:
+          0: normal
+          1: disabled
+          2: purged
+          5: reading
+          6: settle
+          7: not_found
+          8: lost
+          9: read_error
+          10: no_comm
+          11: pwr_error
+          12: breaker_tripped
+          13: fuse_blown
+          14: low_alarm
+          15: low_warning
+          16: high_warning
+          17: high_alarm
+          18: alarm
+          19: under_limit
+          20: over_limit
+          21: nvm_fail
+          22: profile_error
+          23: conflict
+      - OID: 1.3.6.1.4.1.1718.4.1.3.3.1.13
+        name: servertech.sentry4.st4InputCordOutOfBalanceStatus
+        chart_meta:
+          description: Input cord out of balance status
+          family: 'PowerFlow/InputCord/Balance/Deviation/Status'
+          unit: "{status}"
+        mapping:
+          0: normal
+          1: disabled
+          2: purged
+          5: reading
+          6: settle
+          7: not_found
+          8: lost
+          9: read_error
+          10: no_comm
+          11: pwr_error
+          12: breaker_tripped
+          13: fuse_blown
+          14: low_alarm
+          15: low_warning
+          16: high_warning
+          17: high_alarm
+          18: alarm
+          19: under_limit
+          20: over_limit
+          21: nvm_fail
+          22: profile_error
+          23: conflict
+    metric_tags:
+      - tag: servertech_sentry4_st4_input_cord_id
+        symbol:
+          name: servertech.sentry4.st4InputCordID
+          OID: 1.3.6.1.4.1.1718.4.1.3.2.1.2
+      - tag: servertech_sentry4_st4_input_cord_name
+        symbol:
+          name: servertech.sentry4.st4InputCordName
+          OID: 1.3.6.1.4.1.1718.4.1.3.2.1.3
+      - tag: servertech_sentry4_st4_input_cord_inlet_type
+        symbol:
+          name: servertech.sentry4.st4InputCordInletType
+          OID: 1.3.6.1.4.1.1718.4.1.3.2.1.6
+
+  - MIB: SENTRY4-MIB
+    table:
+      name: servertech.sentry4.st4LineMonitorTable
+      OID: 1.3.6.1.4.1.1718.4.1.4
+    symbols:
+      - name: servertech.sentry4.st4LineCurrent
+        OID: 1.3.6.1.4.1.1718.4.1.4.3.1.3
+        chart_meta:
+          description: Current of the line
+          family: 'PowerFlow/Line/Current/Value'
+          unit: "A"
+      - name: servertech.sentry4.st4LineCurrentUtilized
+        OID: 1.3.6.1.4.1.1718.4.1.4.3.1.5
+        chart_meta:
+          description: Utilized current of the line
+          family: 'PowerFlow/Line/Current/Utilized'
+          unit: "A"
+      - OID: 1.3.6.1.4.1.1718.4.1.4.3.1.1
+        name: servertech.sentry4.st4LineState
+        chart_meta:
+          description: Line power state
+          family: 'Hardware/Line/Power/State'
+          unit: "{status}"
+        mapping:
+          0: unknown
+          1: on
+          2: off
+      - OID: 1.3.6.1.4.1.1718.4.1.4.3.1.2
+        name: servertech.sentry4.st4LineStatus
+        chart_meta:
+          description: Line operational status
+          family: 'Hardware/Line/Status'
+          unit: "{status}"
+        mapping:
+          0: normal
+          1: disabled
+          2: purged
+          5: reading
+          6: settle
+          7: not_found
+          8: lost
+          9: read_error
+          10: no_comm
+          11: pwr_error
+          12: breaker_tripped
+          13: fuse_blown
+          14: low_alarm
+          15: low_warning
+          16: high_warning
+          17: high_alarm
+          18: alarm
+          19: under_limit
+          20: over_limit
+          21: nvm_fail
+          22: profile_error
+          23: conflict
+      - OID: 1.3.6.1.4.1.1718.4.1.4.3.1.4
+        name: servertech.sentry4.st4LineCurrentStatus
+        chart_meta:
+          description: Line current status
+          family: 'PowerFlow/Line/Current/Status'
+          unit: "{status}"
+        mapping:
+          0: normal
+          1: disabled
+          2: purged
+          5: reading
+          6: settle
+          7: not_found
+          8: lost
+          9: read_error
+          10: no_comm
+          11: pwr_error
+          12: breaker_tripped
+          13: fuse_blown
+          14: low_alarm
+          15: low_warning
+          16: high_warning
+          17: high_alarm
+          18: alarm
+          19: under_limit
+          20: over_limit
+          21: nvm_fail
+          22: profile_error
+          23: conflict
+    metric_tags:
+      - tag: servertech_sentry4_st4_line_id
+        symbol:
+          name: servertech.sentry4.st4LineID
+          OID: 1.3.6.1.4.1.1718.4.1.4.2.1.2
+      - tag: servertech_sentry4_st4_line_label
+        symbol:
+          name: servertech.sentry4.st4LineLabel
+          OID: 1.3.6.1.4.1.1718.4.1.4.2.1.4
+
+  - MIB: SENTRY4-MIB
+    table:
+      name: servertech.sentry4.st4PhaseMonitorTable
+      OID: 1.3.6.1.4.1.1718.4.1.5
+    symbols:
+      - name: servertech.sentry4.st4PhaseVoltage
+        OID: 1.3.6.1.4.1.1718.4.1.5.3.1.3
+        chart_meta:
+          description: Voltage of the phase
+          family: 'PowerFlow/Phase/Voltage/Value'
+          unit: "V"
+      - name: servertech.sentry4.st4PhaseVoltageDeviation
+        OID: 1.3.6.1.4.1.1718.4.1.5.3.1.5
+        chart_meta:
+          description: Voltage deviation of the phase
+          family: 'PowerFlow/Phase/Voltage/Deviation'
+          unit: "V"
+      - name: servertech.sentry4.st4PhaseCurrent
+        OID: 1.3.6.1.4.1.1718.4.1.5.3.1.6
+        chart_meta:
+          description: Current of the phase
+          family: 'PowerFlow/Phase/Current/Value'
+          unit: "A"
+      - name: servertech.sentry4.st4PhaseCurrentCrestFactor
+        OID: 1.3.6.1.4.1.1718.4.1.5.3.1.7
+        chart_meta:
+          description: Current crest factor of the phase
+          family: 'PowerFlow/Phase/Current/CrestFactor'
+          unit: "1"
+      - name: servertech.sentry4.st4PhaseActivePower
+        OID: 1.3.6.1.4.1.1718.4.1.5.3.1.8
+        chart_meta:
+          description: Active power of the phase
+          family: 'PowerFlow/Phase/Active'
+          unit: "W"
+      - name: servertech.sentry4.st4PhaseApparentPower
+        OID: 1.3.6.1.4.1.1718.4.1.5.3.1.9
+        chart_meta:
+          description: Apparent power of the phase
+          family: 'PowerFlow/Phase/Apparent'
+          unit: "VA"
+      - name: servertech.sentry4.st4PhasePowerFactor
+        OID: 1.3.6.1.4.1.1718.4.1.5.3.1.10
+        chart_meta:
+          description: Power factor of the phase
+          family: 'PowerFlow/Phase/Factor'
+          unit: "1"
+      - name: servertech.sentry4.st4PhaseEnergy
+        OID: 1.3.6.1.4.1.1718.4.1.5.3.1.13
+        chart_meta:
+          description: Energy consumed by the phase
+          family: 'PowerFlow/Phase/Energy/Total'
+          unit: "Wh"
+      - OID: 1.3.6.1.4.1.1718.4.1.5.3.1.1
+        name: servertech.sentry4.st4PhaseState
+        chart_meta:
+          description: Phase power state
+          family: 'Hardware/Phase/Power/State'
+          unit: "{status}"
+        mapping:
+          0: unknown
+          1: on
+          2: off
+      - OID: 1.3.6.1.4.1.1718.4.1.5.3.1.2
+        name: sservertech.sentry4.st4PhaseStatus
+        chart_meta:
+          description: Phase operational status
+          family: 'Hardware/Phase/Status'
+          unit: "{status}"
+        mapping:
+          0: normal
+          1: disabled
+          2: purged
+          5: reading
+          6: settle
+          7: not_found
+          8: lost
+          9: read_error
+          10: no_comm
+          11: pwr_error
+          12: breaker_tripped
+          13: fuse_blown
+          14: low_alarm
+          15: low_warning
+          16: high_warning
+          17: high_alarm
+          18: alarm
+          19: under_limit
+          20: over_limit
+          21: nvm_fail
+          22: profile_error
+          23: conflict
+      - OID: 1.3.6.1.4.1.1718.4.1.5.3.1.4
+        name: servertech.sentry4.st4PhaseVoltageStatus
+        chart_meta:
+          description: Phase voltage status
+          family: 'PowerFlow/Phase/Voltage/Status'
+          unit: "{status}"
+        mapping:
+          0: normal
+          1: disabled
+          2: purged
+          5: reading
+          6: settle
+          7: not_found
+          8: lost
+          9: read_error
+          10: no_comm
+          11: pwr_error
+          12: breaker_tripped
+          13: fuse_blown
+          14: low_alarm
+          15: low_warning
+          16: high_warning
+          17: high_alarm
+          18: alarm
+          19: under_limit
+          20: over_limit
+          21: nvm_fail
+          22: profile_error
+          23: conflict
+      - OID: 1.3.6.1.4.1.1718.4.1.5.3.1.11
+        name: servertech.sentry4.st4PhasePowerFactorStatus
+        chart_meta:
+          description: Phase power factor status
+          family: 'PowerFlow/Phase/Factor/Status'
+          unit: "{status}"
+        mapping:
+          0: normal
+          1: disabled
+          2: purged
+          5: reading
+          6: settle
+          7: not_found
+          8: lost
+          9: read_error
+          10: no_comm
+          11: pwr_error
+          12: breaker_tripped
+          13: fuse_blown
+          14: low_alarm
+          15: low_warning
+          16: high_warning
+          17: high_alarm
+          18: alarm
+          19: under_limit
+          20: over_limit
+          21: nvm_fail
+          22: profile_error
+          23: conflict
+      - OID: 1.3.6.1.4.1.1718.4.1.5.3.1.12
+        name: servertech.sentry4.st4PhaseReactance
+        chart_meta:
+          description: Phase reactance type
+          family: 'PowerFlow/Phase/Reactance/Type'
+          unit: "{status}"
+        mapping:
+          0: unknown
+          1: capacitive
+          2: inductive
+          3: resistive
+    metric_tags:
+      - tag: servertech_sentry4_st4_phase_id
+        symbol:
+          name: servertech.sentry4.st4PhaseID
+          OID: 1.3.6.1.4.1.1718.4.1.5.2.1.2
+      - tag: servertech_sentry4_st4_phase_label
+        symbol:
+          name: servertech.sentry4.st4PhaseLabel
+          OID: 1.3.6.1.4.1.1718.4.1.5.2.1.4
+
+  - MIB: SENTRY4-MIB
+    table:
+      name: servertech.sentry4.st4OcpMonitorTable
+      OID: 1.3.6.1.4.1.1718.4.1.6
+    symbols:
+      - OID: 1.3.6.1.4.1.1718.4.1.6.3.1.1
+        name: servertech.sentry4.st4OcpStatus
+        chart_meta:
+          description: Overcurrent protection device status
+          family: 'Hardware/OCP/Status'
+          unit: "{status}"
+        mapping:
+          0: normal
+          1: disabled
+          2: purged
+          5: reading
+          6: settle
+          7: not_found
+          8: lost
+          9: read_error
+          10: no_comm
+          11: pwr_error
+          12: breaker_tripped
+          13: fuse_blown
+          14: low_alarm
+          15: low_warning
+          16: high_warning
+          17: high_alarm
+          18: alarm
+          19: under_limit
+          20: over_limit
+          21: nvm_fail
+          22: profile_error
+          23: conflict
+    metric_tags:
+      - tag: servertech_sentry4_st4_ocp_id
+        symbol:
+          name: servertech.sentry4.st4OcpID
+          OID: 1.3.6.1.4.1.1718.4.1.6.2.1.2
+      - tag: servertech_sentry4_st4_ocp_label
+        symbol:
+          name: servertech.sentry4.st4OcpLabel
+          OID: 1.3.6.1.4.1.1718.4.1.6.2.1.4
+      - tag: servertech_sentry4_st4_ocp_type
+        symbol:
+          name: servertech.sentry4.st4OcpType
+          OID: 1.3.6.1.4.1.1718.4.1.6.2.1.6
+        mapping:
+          0: fuse
+          1: breaker
+
+  - MIB: SENTRY4-MIB
+    table:
+      name: servertech.sentry4.st4BranchMonitorTable
+      OID: 1.3.6.1.4.1.1718.4.1.7
+    symbols:
+      - name: servertech.sentry4.st4BranchCurrent
+        OID: 1.3.6.1.4.1.1718.4.1.7.3.1.3
+        chart_meta:
+          description: Current of the branch
+          family: 'PowerFlow/Branch/Current/Value'
+          unit: "A"
+      - name: servertech.sentry4.st4BranchCurrentUtilized
+        OID: 1.3.6.1.4.1.1718.4.1.7.3.1.5
+        chart_meta:
+          description: Utilized current of the branch
+          family: 'PowerFlow/Branch/Current/Utilized'
+          unit: "A"
+      - OID: 1.3.6.1.4.1.1718.4.1.7.3.1.1
+        name: servertech.sentry4.st4BranchState
+        chart_meta:
+          description: Branch power state
+          family: 'Hardware/Branch/Power/State'
+          unit: "{status}"
+        mapping:
+          0: unknown
+          1: on
+          2: off
+      - OID: 1.3.6.1.4.1.1718.4.1.7.3.1.2
+        name: servertech.sentry4.st4BranchStatus
+        chart_meta:
+          description: Branch operational status
+          family: 'Hardware/Branch/Status'
+          unit: "{status}"
+        mapping:
+          0: normal
+          1: disabled
+          2: purged
+          5: reading
+          6: settle
+          7: not_found
+          8: lost
+          9: read_error
+          10: no_comm
+          11: pwr_error
+          12: breaker_tripped
+          13: fuse_blown
+          14: low_alarm
+          15: low_warning
+          16: high_warning
+          17: high_alarm
+          18: alarm
+          19: under_limit
+          20: over_limit
+          21: nvm_fail
+          22: profile_error
+          23: conflict
+      - OID: 1.3.6.1.4.1.1718.4.1.7.3.1.4
+        name: servertech.sentry4.st4BranchCurrentStatus
+        chart_meta:
+          description: Branch current status
+          family: 'PowerFlow/Branch/Current/Status'
+          unit: "{status}"
+        mapping:
+          0: normal
+          1: disabled
+          2: purged
+          5: reading
+          6: settle
+          7: not_found
+          8: lost
+          9: read_error
+          10: no_comm
+          11: pwr_error
+          12: breaker_tripped
+          13: fuse_blown
+          14: low_alarm
+          15: low_warning
+          16: high_warning
+          17: high_alarm
+          18: alarm
+          19: under_limit
+          20: over_limit
+          21: nvm_fail
+          22: profile_error
+          23: conflict
+    metric_tags:
+      - tag: servertech_sentry4_st4_branch_id
+        symbol:
+          name: servertech.sentry4.st4BranchID
+          OID: 1.3.6.1.4.1.1718.4.1.7.2.1.2
+      - tag: servertech_sentry4_st4_branch_label
+        symbol:
+          name: servertech.sentry4.st4BranchLabel
+          OID: 1.3.6.1.4.1.1718.4.1.7.2.1.4
+      - tag: _servertech_sentry4_st4_branch_phase_id
+        symbol:
+          name: servertech.sentry4.st4BranchPhaseID
+          OID: 1.3.6.1.4.1.1718.4.1.7.2.1.20
+      - tag: _servertech_sentry4_st4_branch_ocp_id
+        symbol:
+          name: servertech.sentry4.st4BranchOcpID
+          OID: 1.3.6.1.4.1.1718.4.1.7.2.1.21
+
+  - MIB: SENTRY4-MIB
+    table:
+      name: servertech.sentry4.st4OutletMonitorTable
+      OID: 1.3.6.1.4.1.1718.4.1.8
+    symbols:
+      - OID: 1.3.6.1.4.1.1718.4.1.8.2.1.20
+        name: servertech.sentry4.st4OutletWakeupState
+        chart_meta:
+          description: Outlet wakeup state configuration
+          family: 'Hardware/Outlet/Wakeup/State'
+          unit: "{status}"
+        mapping:
+          0: on
+          1: off
+          2: last
+      - OID: 1.3.6.1.4.1.1718.4.1.8.3.1.1
+        name: servertech.sentry4.st4OutletState
+        chart_meta:
+          description: Outlet power state
+          family: 'Hardware/Outlet/Power/State'
+          unit: "{status}"
+        mapping:
+          0: unknown
+          1: on
+          2: off
+      - OID: 1.3.6.1.4.1.1718.4.1.8.3.1.2
+        name: servertech.sentry4.st4OutletStatus
+        chart_meta:
+          description: Outlet operational status
+          family: 'Hardware/Outlet/Status'
+          unit: "{status}"
+        mapping:
+          0: normal
+          1: disabled
+          2: purged
+          5: reading
+          6: settle
+          7: not_found
+          8: lost
+          9: read_error
+          10: no_comm
+          11: pwr_error
+          12: breaker_tripped
+          13: fuse_blown
+          14: low_alarm
+          15: low_warning
+          16: high_warning
+          17: high_alarm
+          18: alarm
+          19: under_limit
+          20: over_limit
+          21: nvm_fail
+          22: profile_error
+          23: conflict
+    metric_tags:
+      - tag: servertech_sentry4_st4_outlet_id
+        symbol:
+          name: servertech.sentry4.st4OutletID
+          OID: 1.3.6.1.4.1.1718.4.1.8.2.1.2
+      - tag: servertech_sentry4_st4_outlet_name
+        symbol:
+          name: servertech.sentry4.st4OutletName
+          OID: 1.3.6.1.4.1.1718.4.1.8.2.1.3
+      - tag: _servertech_sentry4_st4_outlet_socket_type
+        symbol:
+          name: servertech.sentry4.st4OutletSocketType
+          OID: 1.3.6.1.4.1.1718.4.1.8.2.1.6
+      - tag: _servertech_sentry4_st4_outlet_phase_id
+        symbol:
+          name: servertech.sentry4.st4OutletPhaseID
+          OID: 1.3.6.1.4.1.1718.4.1.8.2.1.30
+      - tag: _servertech_sentry4_st4_outlet_ocp_id
+        symbol:
+          name: servertech.sentry4.st4OutletOcpID
+          OID: 1.3.6.1.4.1.1718.4.1.8.2.1.31
+      - tag: _servertech_sentry4_st4_outlet_branch_id
+        symbol:
+          name: servertech.sentry4.st4OutletBranchID
+          OID: 1.3.6.1.4.1.1718.4.1.8.2.1.32
+
+  - MIB: SENTRY4-MIB
+    table:
+      name: servertech.sentry4.st4TempSensorMonitorTable
+      OID: 1.3.6.1.4.1.1718.4.1.9
+    symbols:
+      - name: servertech.sentry4.st4TempSensorValue
+        OID: 1.3.6.1.4.1.1718.4.1.9.3.1.1
+        chart_meta:
+          description: Temperature sensor value
+          family: 'Hardware/Sensor/Temperature/Value'
+          unit: "Cel"
+      - OID: 1.3.6.1.4.1.1718.4.1.9.3.1.2
+        name: servertech.sentry4.st4TempSensorStatus
+        chart_meta:
+          description: Temperature sensor status
+          family: 'Hardware/Sensor/Temperature/Status'
+          unit: "{status}"
+        mapping:
+          0: normal
+          1: disabled
+          2: purged
+          5: reading
+          6: settle
+          7: not_found
+          8: lost
+          9: read_error
+          10: no_comm
+          11: pwr_error
+          12: breaker_tripped
+          13: fuse_blown
+          14: low_alarm
+          15: low_warning
+          16: high_warning
+          17: high_alarm
+          18: alarm
+          19: under_limit
+          20: over_limit
+          21: nvm_fail
+          22: profile_error
+          23: conflict
+    metric_tags:
+      - tag: servertech_sentry4_st4_temp_sensor_id
+        symbol:
+          name: servertech.sentry4.st4TempSensorID
+          OID: 1.3.6.1.4.1.1718.4.1.9.2.1.2
+      - tag: servertech_sentry4_st4_temp_sensor_name
+        symbol:
+          name: servertech.sentry4.st4TempSensorName
+          OID: 1.3.6.1.4.1.1718.4.1.9.2.1.3
+
+  - MIB: SENTRY4-MIB
+    table:
+      name: servertech.sentry4.st4HumidSensorMonitorTable
+      OID: 1.3.6.1.4.1.1718.4.1.10
+    symbols:
+      - name: servertech.sentry4.st4HumidSensorValue
+        OID: 1.3.6.1.4.1.1718.4.1.10.3.1.1
+        chart_meta:
+          description: Humidity sensor value
+          family: 'Hardware/Sensor/Humidity/Value'
+          unit: "%"
+      - OID: 1.3.6.1.4.1.1718.4.1.10.3.1.2
+        name: servertech.sentry4.st4HumidSensorStatus
+        chart_meta:
+          description: Humidity sensor status
+          family: 'Hardware/Sensor/Humidity/Status'
+          unit: "{status}"
+        mapping:
+          0: normal
+          1: disabled
+          2: purged
+          5: reading
+          6: settle
+          7: not_found
+          8: lost
+          9: read_error
+          10: no_comm
+          11: pwr_error
+          12: breaker_tripped
+          13: fuse_blown
+          14: low_alarm
+          15: low_warning
+          16: high_warning
+          17: high_alarm
+          18: alarm
+          19: under_limit
+          20: over_limit
+          21: nvm_fail
+          22: profile_error
+          23: conflict
+    metric_tags:
+      - tag: servertech_sentry4_st4_humid_sensor_id
+        symbol:
+          name: servertech.sentry4.st4HumidSensorID
+          OID: 1.3.6.1.4.1.1718.4.1.10.2.1.2
+      - tag: servertech_sentry4_st4_humid_sensor_name
+        symbol:
+          name: servertech.sentry4.st4HumidSensorName
+          OID: 1.3.6.1.4.1.1718.4.1.10.2.1.3

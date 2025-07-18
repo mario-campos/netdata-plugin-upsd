@@ -1,0 +1,15 @@
+extends:
+  - _system-base.yaml
+  - _std-host-resources-mib-feat-base.yaml
+  - _std-if-mib.yaml
+
+metadata:
+  device:
+    fields:
+      vendor:
+        value: "VeloCloud"
+      type:
+        value: "SD-WAN"
+
+sysobjectid:
+  - 1.3.6.1.4.1.45346.1.1 # VeloCloud EDGE

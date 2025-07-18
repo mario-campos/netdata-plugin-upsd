@@ -1,0 +1,33 @@
+# Firewall counter and rate metrics
+
+metrics:
+  - MIB: JUNIPER-FIREWALL-MIB
+    table:
+      OID: 1.3.6.1.4.1.2636.3.5.2
+      name: jnxFirewallCounterTable
+    symbols:
+      - OID: 1.3.6.1.4.1.2636.3.5.2.1.4
+        name: jnxFWCounterPacketCount
+        chart_meta:
+          family: 'Network/Firewall/Filter/Packet/Total'
+          description: The number of packets being counted pertaining to the specified counter or policer
+          unit: "{packet}/s"
+      - OID: 1.3.6.1.4.1.2636.3.5.2.1.5
+        name: jnxFWCounterByteCount
+        chart_meta:
+          family: 'Network/Firewall/Filter/Throughput/Total'
+          description: The number of bytes being counted pertaining to the specified counter. For policers, this field is always zero because policers do not count number of bytes
+          unit: "By/s"
+    metric_tags:
+      - tag: firewall_filter_name
+        symbol:
+          OID: 1.3.6.1.4.1.2636.3.5.2.1.1
+          name: jnxFWCounterFilterName
+      - tag: counter_name
+        symbol:
+          OID: 1.3.6.1.4.1.2636.3.5.2.1.2
+          name: jnxFWCounterName
+      - tag: counter_type
+        symbol:
+          OID: 1.3.6.1.4.1.2636.3.5.2.1.3
+          name: jnxFWCounterType

@@ -1,0 +1,99 @@
+metrics:
+  - MIB: SIP-COMMON-MIB
+    table:
+      name: sipCommonCfgTable
+      OID: 1.3.6.1.2.1.149.1.1.1
+    symbols:
+      - OID: 1.3.6.1.2.1.149.1.1.1.1.2
+        name: sipCommonCfgServiceOperStatus
+        chart_meta:
+          family: 'Network/VoIP/SIP/Service/Status'
+          description: Current operational state of the SIP application
+          unit: "{status}"
+        mapping:
+          1: unknown
+          7: testing
+          2: up
+          3: down
+          5: restarting
+          6: quiescing
+          4: congested
+    metric_tags:
+      - index: 1
+        tag: applIndex
+  - MIB: SIP-COMMON-MIB
+    table:
+      name: sipCommonSummaryStatsTable
+      OID: 1.3.6.1.2.1.149.1.3.1
+    symbols:
+      - OID: 1.3.6.1.2.1.149.1.3.1.1.1
+        name: sipCommonSummaryInRequests
+        chart_meta:
+          family: 'Network/VoIP/SIP/Request/Total/In'
+          description: Total number of SIP request messages received including retransmissions
+          unit: "{request}/s"
+      - OID: 1.3.6.1.2.1.149.1.3.1.1.2
+        name: sipCommonSummaryOutRequests
+        chart_meta:
+          family: 'Network/VoIP/SIP/Request/Total/Out'
+          description: Total number of SIP request messages sent including retransmissions
+          unit: "{request}/s"
+      - OID: 1.3.6.1.2.1.149.1.3.1.1.3
+        name: sipCommonSummaryInResponses
+        chart_meta:
+          family: 'Network/VoIP/SIP/Response/Total/In'
+          description: Total number of SIP response messages received including retransmissions
+          unit: "{response}/s"
+      - OID: 1.3.6.1.2.1.149.1.3.1.1.4
+        name: sipCommonSummaryOutResponses
+        chart_meta:
+          family: 'Network/VoIP/SIP/Response/Total/Out'
+          description: Total number of SIP response messages sent including retransmissions
+          unit: "{response}/s"
+      - OID: 1.3.6.1.2.1.149.1.3.1.1.5
+        name: sipCommonSummaryTotalTransactions
+        chart_meta:
+          family: 'Network/VoIP/SIP/Transaction/Total'
+          description: Count of transactions in progress and terminated transactions
+          unit: "{transaction}"
+    metric_tags:
+      - index: 1
+        tag: applIndex
+  - MIB: SIP-COMMON-MIB
+    table:
+      name: sipCommonStatusCodeTable
+      OID: 1.3.6.1.2.1.149.1.5.1
+    symbols:
+      - OID: 1.3.6.1.2.1.149.1.5.1.1.3
+        name: sipCommonStatusCodeIns
+        chart_meta:
+          family: 'Network/VoIP/SIP/Response/StatusCode/In'
+          description: Total number of response messages received with the specified status code (sipCommonStatusCodeValue)
+          unit: "{response}/s"
+      - OID: 1.3.6.1.2.1.149.1.5.1.1.4
+        name: sipCommonStatusCodeOuts
+        chart_meta:
+          family: 'Network/VoIP/SIP/Response/StatusCode/Out'
+          description: Total number of response messages sent with the specified status code (sipCommonStatusCodeValue)
+          unit: "{response}/s"
+    metric_tags:
+      - index: 1
+        tag: applIndex
+      - index: 2
+        tag: sipCommonStatusCodeMethod
+      - index: 3
+        tag: sipCommonStatusCodeValue
+  - MIB: SIP-COMMON-MIB
+    table:
+      name: sipCommonTransCurrentTable
+      OID: 1.3.6.1.2.1.149.1.6.1
+    symbols:
+      - OID: 1.3.6.1.2.1.149.1.6.1.1.1
+        name: sipCommonTransCurrentactions
+        chart_meta:
+          family: 'Network/VoIP/SIP/Transaction/Current'
+          description: Number of transactions awaiting definitive response
+          unit: "{transaction}"
+    metric_tags:
+      - index: 1
+        tag: applIndex

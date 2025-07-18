@@ -1,0 +1,93 @@
+# Metrics mixin for Cisco Catalyst devices.
+# Stored in a separate file for reuse within the cisco-3850 compat shim.
+
+# Example sysDescr:
+#   "Cisco Systems WS-C6509.Cisco Catalyst Operating System Software, Version 5.5(8).Copyright (c) 1995-2001 by Cisco Systems."
+#   "Cisco IOS Software, IOS-XE Software, Catalyst L3 Switch Software (CAT3K_CAA-UNIVERSALK9-M), Version 03.06.06E RELEASE SOFTWARE (fc1) Technical Support: http://www.cisco.com/techsupport Copyright (c) 1986-2016 by Cisco Systems, Inc. Compiled Sat 17-Dec-"
+
+metadata:
+  device:
+    fields:
+      serial_number:
+        symbol:
+          # Cisco Catalyst devices are using CISCO-STACK-MIB
+          # Source1: http://www.circitor.fr/Mibs/Html/C/CISCO-STACK-MIB.php
+          #   "This MIB provides configuration and runtime status for chassis, modules, ports, etc. on the Catalyst systems."
+          # Source2: chassisSerialNumberString is present for this device:
+          #   Cisco Systems WS-C6509.Cisco Catalyst Operating System Software, Version 5.5(8).Copyright (c) 1995-2001 by Cisco Systems.
+          MIB: CISCO-STACK-MIB
+          OID: 1.3.6.1.4.1.9.5.1.2.19.0
+          name: chassisSerialNumberString
+
+metrics:
+  - MIB: CISCO-ENTITY-SENSOR-MIB   # TODO: this is not Catalyst-specific, need to add to other Cisco devices
+    table:
+      OID: 1.3.6.1.4.1.9.9.91.1.1.1
+      name: entSensorValueTable
+    symbols:
+      - OID: 1.3.6.1.4.1.9.9.91.1.1.1.1.4
+        name: entSensorValue # Do not change this name — required by transformEntitySensorValue for matching and renaming logic
+        chart_meta:
+          description: Most recent measurement obtained by the agent for this sensor
+          family: 'Hardware/Sensor/Value'
+          unit: "1"
+        transform: |
+          {{- transformEntitySensorValue .Metric -}}
+    metric_tags:
+      - tag: sensor_index
+        index: 1
+      - tag: _ent_phys_descr
+        MIB: ENTITY-MIB
+        table: entPhysicalTable
+        symbol:
+          OID: 1.3.6.1.2.1.47.1.1.1.1.2
+          name: entPhysicalDescr
+      - tag: rm:sensor_type # needed for transform
+        symbol:
+          OID: 1.3.6.1.4.1.9.9.91.1.1.1.1.1
+          name: entSensorType
+      - tag: rm:sensor_scale # needed for transform
+        symbol:
+          OID: 1.3.6.1.4.1.9.9.91.1.1.1.1.2
+          name: entSensorScale
+      - tag: rm:sensor_precision # needed for transform
+        symbol:
+          OID: 1.3.6.1.4.1.9.9.91.1.1.1.1.3
+          name: entSensorPrecision
+
+  - MIB: CISCO-IF-EXTENSION-MIB # TODO: this is not Catalyst-specific, need to add to other Cisco devices
+    table:
+      OID: 1.3.6.1.4.1.9.9.276.1.1.1
+      name: cieIfPacketStatsTable
+    symbols:
+      - OID: 1.3.6.1.4.1.9.9.276.1.1.1.1.1
+        name: cieIfLastInTime
+        chart_meta:
+          description: "Elapsed time in milliseconds since last protocol input packet was received"
+          family: 'Network/Interface/Activity/In'
+          unit: "ms"
+      - OID: 1.3.6.1.4.1.9.9.276.1.1.1.1.2
+        name: cieIfLastOutTime
+        chart_meta:
+          description: "Elapsed time in milliseconds since last protocol output packet was transmitted"
+          family: 'Network/Interface/Activity/Out'
+          unit: "ms"
+      - OID: 1.3.6.1.4.1.9.9.276.1.1.1.1.10
+        name: cieIfInputQueueDrops
+        chart_meta:
+          description: "Number of input packets which were dropped"
+          family: 'Network/Interface/Queue/Drops/In'
+          unit: "{drop}/s"
+      - OID: 1.3.6.1.4.1.9.9.276.1.1.1.1.11
+        name: cieIfOutputQueueDrops
+        chart_meta:
+          description: "Number of output packets dropped by the interface"
+          family: 'Network/Interface/Queue/Drops/Out'
+          unit: "{drop}/s"
+    metric_tags:
+      - tag: interface
+        MIB: IF-MIB
+        table: ifXTable
+        symbol:
+          OID: 1.3.6.1.2.1.31.1.1.1.1
+          name: ifName

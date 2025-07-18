@@ -1,0 +1,165 @@
+extends:
+  - _std-ucd-mib.yaml
+  - netgear.yaml
+
+sysobjectid:
+  - 1.3.6.1.4.1.4526.100.16.*
+
+metadata:
+  device:
+    fields:
+      type:
+        value: "Storage"
+
+# READYNASOS-MIB
+# https://www.downloads.netgear.com/files/ReadyNAS/READYNAS-MIB.txt
+# https://github.com/NextDom/plugin-SNMP/blob/master/ressources/READYNAS-MIB.txt
+
+metrics:
+  - MIB: READYNASOS-MIB
+    table:
+      OID: 1.3.6.1.4.1.4526.22.3
+      name: diskTable
+    symbols:
+      - OID: 1.3.6.1.4.1.4526.22.3.1.6
+        name: netgear.readynasos.ataError
+        chart_meta:
+          description: Ata error count
+          family: 'Hardware/Disk/Error/ATA'
+          unit: "{error}"
+      - OID: 1.3.6.1.4.1.4526.22.3.1.7
+        name: netgear.readynasos.diskCapacity
+        chart_meta:
+          description: Disk capacity
+          family: 'Hardware/Disk/Capacity'
+          unit: "By"
+      - OID: 1.3.6.1.4.1.4526.22.3.1.10
+        name: netgear.readynasos.diskTemperature
+        chart_meta:
+          description: Disk temperature
+          family: 'Hardware/Disk/Temperature/Value'
+          unit: "Cel"
+      - OID: 1.3.6.1.4.1.4526.22.3.1.9
+        name: netgear.readynasos.diskState
+        chart_meta:
+          description: Current status of the Disk
+          family: 'Hardware/Disk/Status'
+          unit: "{status}"
+        mapping:
+          0: online
+          1: offline
+    metric_tags:
+      - tag: netgear_readynasos_disk_id
+        symbol:
+          OID: 1.3.6.1.4.1.4526.22.3.1.2
+          name: netgear.readynasos.diskID
+      - tag: netgear_readynasos_disk_slot_name
+        symbol:
+          OID: 1.3.6.1.4.1.4526.22.3.1.3
+          name: netgear.readynasos.diskSlotName
+      - tag: _netgear_readynasos_disk_serial
+        symbol:
+          OID: 1.3.6.1.4.1.4526.22.3.1.4
+          name: netgear.readynasos.diskSerial
+      - tag: netgear_readynasos_disk_model
+        symbol:
+          OID: 1.3.6.1.4.1.4526.22.3.1.5
+          name: netgear.readynasos.diskModel
+      - tag: netgear_readynasos_disk_interface
+        symbol:
+          OID: 1.3.6.1.4.1.4526.22.3.1.8
+          name: netgear.readynasos.diskInterface
+
+  - MIB: READYNASOS-MIB
+    table:
+      OID: 1.3.6.1.4.1.4526.22.4
+      name: fanTable
+    symbols:
+      - OID: 1.3.6.1.4.1.4526.22.4.1.2
+        name: netgear.readynasos.fanRPM
+        chart_meta:
+          description: Fan revolutions per minute
+          family: 'Hardware/Fan/Speed'
+          unit: "rpm"
+    metric_tags:
+      - tag: netgear_readynasos_fan_number
+        symbol:
+          OID: 1.3.6.1.4.1.4526.22.4.1.1
+          name: netgear.readynasos.fanNumber
+      - tag: netgear_readynasos_fan_type
+        symbol:
+          OID: 1.3.6.1.4.1.4526.22.4.1.4
+          name: netgear.readynasos.fanType
+
+  - MIB: READYNASOS-MIB
+    table:
+      OID: 1.3.6.1.4.1.4526.22.5
+      name: temperatureTable
+    symbols:
+      - OID: 1.3.6.1.4.1.4526.22.5.1.2
+        name: netgear.readynasos.temperatureValue
+        chart_meta:
+          description: Temperature value
+          family: 'Hardware/Sensor/Temperature/Value'
+          unit: "Cel"
+      - OID: 1.3.6.1.4.1.4526.22.5.1.4
+        name: netgear.readynasos.temperatureMin
+        chart_meta:
+          description: Minimum temperature
+          family: 'Hardware/Sensor/Temperature/Min'
+          unit: "Cel"
+      - OID: 1.3.6.1.4.1.4526.22.5.1.5
+        name: netgear.readynasos.temperatureMax
+        chart_meta:
+          description: Maximum temperature
+          family: 'Hardware/Sensor/Temperature/Max'
+          unit: "Cel"
+    metric_tags:
+      - tag: netgear_readynasos_temp_index
+        index: 1
+      - tag: netgear_readynasos_temperature_type
+        symbol:
+          OID: 1.3.6.1.4.1.4526.22.5.1.3
+          name: netgear.readynasos.temperatureType
+
+  - MIB: READYNASOS-MIB
+    table:
+      OID: 1.3.6.1.4.1.4526.22.7
+      name: volumeTable
+    symbols:
+      - OID: 1.3.6.1.4.1.4526.22.7.1.5
+        name: netgear.readynasos.volumeSize
+        chart_meta:
+          description: Volume size
+          family: 'Storage/Volume/Space/Size'
+          unit: "By"
+      - OID: 1.3.6.1.4.1.4526.22.7.1.6
+        name: netgear.readynasos.volumeFreeSpace
+        chart_meta:
+          description: Volume free space
+          family: 'Storage/Volume/Space/Free'
+          unit: "By"
+      - OID: 1.3.6.1.4.1.4526.22.7.1.4
+        name: netgear.readynasos.volumeStatus
+        chart_meta:
+          description: Volume severity
+          family: 'Storage/Volume/Status'
+          unit: "{status}"
+        mapping:
+          1: redundant
+          2: unprotected
+          3: degraded
+          4: dead
+          5: inactive
+          6: unknown
+    metric_tags:
+      - tag: netgear_readynasos_volume_index
+        index: 1
+      - tag: netgear_readynasos_volume_name
+        symbol:
+          OID: 1.3.6.1.4.1.4526.22.7.1.2
+          name: netgear.readynasos.volumeName
+      - tag: netgear_readynasos_volume_raid_level
+        symbol:
+          OID: 1.3.6.1.4.1.4526.22.7.1.3
+          name: netgear.readynasos.volumeRAIDLevel

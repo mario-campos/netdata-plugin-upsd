@@ -1,0 +1,9 @@
+extends:
+  - _system-base.yaml
+  - _std-if-mib.yaml
+
+metadata:
+  device:
+    fields:
+      vendor:
+        value: "Brocade"

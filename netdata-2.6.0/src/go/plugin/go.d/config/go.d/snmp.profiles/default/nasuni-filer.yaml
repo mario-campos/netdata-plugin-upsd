@@ -1,0 +1,580 @@
+extends:
+  - _system-base.yaml
+  - _std-if-mib.yaml
+  - _std-ucd-mib.yaml
+
+sysobjectid:
+  - 1.3.6.1.4.1.42040.1.1.0
+
+metadata:
+  device:
+    fields:
+      vendor:
+        value: "nasuni"
+      type:
+        value: "storage"
+
+metric_tags:
+  - tag: filer_identifier
+    OID: 1.3.6.1.4.1.42040.1.1.0
+    symbol: filerIdentifier
+  - tag: filer_version
+    OID: 1.3.6.1.4.1.42040.1.2.0
+    symbol: filerVersion
+  - tag: filer_serial_number
+    OID: 1.3.6.1.4.1.42040.1.3.0
+    symbol: filerSerialNumber
+  - tag: filer_platform_name
+    OID: 1.3.6.1.4.1.42040.1.101.1.0
+    symbol: filerPlatformName
+  - tag: filer_platform_type
+    OID: 1.3.6.1.4.1.42040.1.101.2.0
+    symbol: filerPlatformType
+  - tag: filer_package_format
+    OID: 1.3.6.1.4.1.42040.1.101.3.0
+    symbol: filerPackageFormat
+  - tag: filer_bios_version
+    OID: 1.3.6.1.4.1.42040.1.101.4.0
+    symbol: filerBiosVersion
+  - tag: filer_cpu_model
+    OID: 1.3.6.1.4.1.42040.1.101.5.0
+    symbol: filerCpuModel
+  - tag: filer_cpu_arch
+    OID: 1.3.6.1.4.1.42040.1.101.8.0
+    symbol: filerCpuArch
+
+# 1. NASUNI-FILER-MIB
+#    https://nasuni.my.salesforce.com/sfc/p/#A0000000HeWw/a/2K000000QDf1/q9463pwHtEdgobFDJgRazLocAq6wiExEG756nB7i7XM
+
+metrics:
+  #  - MIB: NASUNI-FILER-MIB # TODO: string metric. Blank if no updated available, otherwise the version of the update.
+  #    symbol:
+  #      OID: 1.3.6.1.4.1.42040.1.5.0
+  #      name: nasuni.filerUpdateAvailable
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.6.0
+      name: nasuni.filerTotalUnprotectedData
+      chart_meta:
+        description: Total amount of unprotected data on the filer
+        family: 'Storage/Data/Unprotected'
+        unit: "By"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.7.0
+      name: nasuni.filerPushesCompleted
+      chart_meta:
+        description: Number of completed pushes
+        family: 'Storage/Cloud/Push/Completed'
+        unit: "{push}/s"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.8.0
+      name: nasuni.filerTotalPushed
+      chart_meta:
+        description: Total amount of data pushed
+        family: 'Storage/Cloud/Push/Throughput'
+        unit: "By/s"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.9.0
+      name: nasuni.filerTotalRead
+      chart_meta:
+        description: Total amount of data read
+        family: 'Storage/IO/Throughput/Read'
+        unit: "By/s"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.10.0
+      name: nasuni.filerOpensForRead
+      chart_meta:
+        description: Number of opens for read
+        family: 'Storage/IO/Operations/Read'
+        unit: "{open}/s"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.11.0
+      name: nasuni.filerOpensForWrite
+      chart_meta:
+        description: Number of opens for write
+        family: 'Storage/IO/Operations/Write'
+        unit: "{open}/s"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.12.0
+      name: nasuni.filerMergeConflicts
+      chart_meta:
+        description: Number of merge conflicts
+        family: 'Storage/Sync/Conflict'
+        unit: "{conflict}/s"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.13.0
+      name: nasuni.filerReadHits
+      chart_meta:
+        description: Number of read hits
+        family: 'Storage/Cache/Read/Hit'
+        unit: "{hit}/s"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.14.0
+      name: nasuni.filerReadMisses
+      chart_meta:
+        description: Number of read misses
+        family: 'Storage/Cache/Read/Miss'
+        unit: "{miss}/s"
+  - MIB: NASUNI-FILER-MIB
+    metric_type: gauge
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.100.1.0
+      name: nasuni.filerCacheTotal
+      chart_meta:
+        description: Total cache size
+        family: 'Storage/Cache/Space/Total'
+        unit: "By"
+  - MIB: NASUNI-FILER-MIB
+    metric_type: gauge
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.100.2.0
+      name: nasuni.filerCacheUsed
+      chart_meta:
+        description: Used cache size
+        family: 'Storage/Cache/Space/Used'
+        unit: "By"
+  - MIB: NASUNI-FILER-MIB
+    metric_type: gauge
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.100.3.0
+      name: nasuni.filerCacheFree
+      chart_meta:
+        description: Free cache size
+        family: 'Storage/Cache/Space/Free'
+        unit: "By"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.103.1.0
+      name: nasuni.filerTotalShares
+      chart_meta:
+        description: Total number of shares
+        family: 'Storage/Share/Total'
+        unit: "{share}"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.103.2.0
+      name: nasuni.filerTotalShareLocks
+      chart_meta:
+        description: Total number of share locks
+        family: 'Storage/Share/Lock'
+        unit: "{lock}"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.103.3.0
+      name: nasuni.filerTotalShareClients
+      chart_meta:
+        description: Total number of share clients
+        family: 'Storage/Share/Client'
+        unit: "{client}"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.104.1.0
+      name: nasuni.filerTotalExports
+      chart_meta:
+        description: Total number of exports
+        family: 'Storage/Export/Total'
+        unit: "{export}"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.105.1.0
+      name: nasuni.filerTotalIscsiTargets
+      chart_meta:
+        description: Total number of iSCSI targets
+        family: 'Storage/iSCSI/Target'
+        unit: "{target}"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.105.2.0
+      name: nasuni.filerTotalIscsiClients
+      chart_meta:
+        description: Total number of iSCSI clients
+        family: 'Storage/iSCSI/Client'
+        unit: "{client}"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.109.1.0
+      name: nasuni.filerTotalFtpdirs
+      chart_meta:
+        description: Total number of FTP directories
+        family: 'Storage/FTP/Directory'
+        unit: "{directory}"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.106.1.0
+      name: nasuni.filerTotalMobileLicenses
+      chart_meta:
+        description: Total number of mobile licenses
+        family: 'System/License/Mobile/Total'
+        unit: "{license}"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.106.2.0
+      name: nasuni.filerNumIOSLicenses
+      chart_meta:
+        description: Number of iOS licenses
+        family: 'System/License/Mobile/iOS'
+        unit: "{license}"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.106.3.0
+      name: nasuni.filerNumAndroidLicenses
+      chart_meta:
+        description: Number of Android licenses
+        family: 'System/License/Mobile/Android'
+        unit: "{license}"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.108.1.0
+      name: nasuni.filerCloudOut
+      chart_meta:
+        description: Amount of data sent to cloud
+        family: 'Network/Cloud/Traffic/Out'
+        unit: "bit/s"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.108.2.0
+      name: nasuni.filerCloudIn
+      chart_meta:
+        description: Amount of data received from cloud
+        family: 'Network/Cloud/Traffic/In'
+        unit: "bit/s"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.108.3.0
+      name: nasuni.filerMobileOut
+      chart_meta:
+        description: Amount of data sent to mobile
+        family: 'Network/Mobile/Traffic/Out'
+        unit: "bit/s"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.108.4.0
+      name: nasuni.filerMobileIn
+      chart_meta:
+        description: Amount of data received from mobile
+        family: 'Network/Mobile/Traffic/In'
+        unit: "bit/s"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.108.5.0
+      name: nasuni.filerUIOut
+      chart_meta:
+        description: Amount of data sent to UI
+        family: 'Network/UI/Traffic/Out'
+        unit: "bit/s"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.108.6.0
+      name: nasuni.filerUIIn
+      chart_meta:
+        description: Amount of data received from UI
+        family: 'Network/UI/Traffic/In'
+        unit: "bit/s"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.108.7.0
+      name: nasuni.filerClientsOut
+      chart_meta:
+        description: Amount of data sent to clients
+        family: 'Network/Client/Traffic/Out'
+        unit: "bit/s"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.108.8.0
+      name: nasuni.filerClientsIn
+      chart_meta:
+        description: Amount of data received from clients
+        family: 'Network/Client/Traffic/In'
+        unit: "bit/s"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.108.9.0
+      name: nasuni.filerMigrationOut
+      chart_meta:
+        description: Amount of data sent during migration
+        family: 'Storage/Migration/Data/Out'
+        unit: "By"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.108.10.0
+      name: nasuni.filerMigrationIn
+      chart_meta:
+        description: Amount of data received during migration
+        family: 'Storage/Migration/Traffic/In'
+        unit: "bit/s"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.3.1.0
+      name: nasuni.accountLicensedCapacity
+      chart_meta:
+        description: Licensed account capacity
+        family: 'System/Account/Capacity/Licensed'
+        unit: "By"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.3.2.0
+      name: nasuni.accountUsedCapacity
+      chart_meta:
+        description: Used account capacity
+        family: 'System/Account/Capacity/Used'
+        unit: "By"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.3.3.0
+      name: nasuni.accountPercentUsedCapacity
+      chart_meta:
+        description: Percent of used account capacity
+        family: 'System/Account/Capacity/Usage'
+        unit: "%"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.102.1.0
+      name: nasuni.filerAmbientTemp
+      chart_meta:
+        description: Ambient temperature of the filer
+        family: 'Environment/Temperature/Ambient'
+        unit: "Cel"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.102.2.0
+      name: nasuni.filerInletTemp
+      chart_meta:
+        description: Inlet temperature of the filer
+        family: 'Hardware/Temperature/Inlet'
+        unit: "Cel"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.102.3.0
+      name: nasuni.filerExhaustTemp
+      chart_meta:
+        description: Exhaust temperature of the filer
+        family: 'Hardware/Temperature/Exhaust'
+        unit: "Cel"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.102.4.0
+      name: nasuni.filerNumPowerSupplies
+      chart_meta:
+        description: Number of power supplies
+        family: 'Hardware/Power/Count'
+        unit: "{power_supply}"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.102.5.0
+      name: nasuni.filerPowerSupplyErrors
+      chart_meta:
+        description: Number of power supply errors
+        family: 'Hardware/Power/Error'
+        unit: "{error}"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.102.6.0
+      name: nasuni.filerNumRaidArrays
+      chart_meta:
+        description: Number of RAID arrays
+        family: 'Hardware/RAID/Array/Count'
+        unit: "{raid_array}"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.102.7.0
+      name: nasuni.filerRaidArrayErrors
+      chart_meta:
+        description: Number of RAID array errors
+        family: 'Hardware/RAID/Array/Error'
+        unit: "{error}"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.102.8.0
+      name: nasuni.filerNumRaidDisks
+      chart_meta:
+        description: Number of RAID disks
+        family: 'Hardware/RAID/Disk/Count'
+        unit: "{raid_disk}"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.102.9.0
+      name: nasuni.filerRaidDiskErrors
+      chart_meta:
+        description: Number of RAID disk errors
+        family: 'Hardware/RAID/Disk/Error'
+        unit: "{error}"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.101.10.0
+      name: nasuni.filerDiskCount
+      chart_meta:
+        description: Number of disks
+        family: 'Hardware/Disk/Count'
+        unit: "{disk}"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.101.6.0
+      name: nasuni.filerPhysCpuCount
+      chart_meta:
+        description: Number of physical CPUs
+        family: 'Hardware/CPU/Count'
+        unit: "{cpu}"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.1.101.7.0
+      name: nasuni.filerCoreCount
+      chart_meta:
+        description: Number of CPU cores
+        family: 'Hardware/CPU/Core/Count'
+        unit: "{core}"
+  - MIB: NASUNI-FILER-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.42040.2.1.0
+      name: nasuni.volumeCount
+      chart_meta:
+        description: Number of volumes
+        family: 'Storage/Volume/Count'
+        unit: "{volume}"
+
+  - MIB: NASUNI-FILER-MIB
+    table:
+      OID: 1.3.6.1.4.1.42040.2.2
+      name: volumeTable
+    symbols:
+      - OID: 1.3.6.1.4.1.42040.2.2.1.6
+        name: nasuni.volumeTableAccessibleData
+        chart_meta:
+          description: Accessible data in volume table
+          family: 'Storage/Volume/Data/Accessible'
+          unit: "By"
+      - OID: 1.3.6.1.4.1.42040.2.2.1.7
+        name: nasuni.volumeTableUnprotectedData
+        chart_meta:
+          description: Unprotected data in volume table
+          family: 'Storage/Volume/Data/Unprotected'
+          unit: "By"
+      - OID: 1.3.6.1.4.1.42040.2.2.1.10
+        name: nasuni.volumeTableLastSnapshotDuration
+        chart_meta:
+          description: Duration of last snapshot in volume table
+          family: 'Storage/Volume/Snapshot/Duration'
+          unit: "s"
+      - OID: 1.3.6.1.4.1.42040.2.2.1.19
+        name: nasuni.volumeTableQuota
+        chart_meta:
+          description: Quota of volume table
+          family: 'Storage/Volume/Quota'
+          unit: "By"
+      - OID: 1.3.6.1.4.1.42040.2.2.1.20
+        name: nasuni.volumeTableNumAVViolations
+        chart_meta:
+          description: Number of AV violations in volume table
+          family: 'Security/AntiVirus/Violation'
+          unit: "{violation}"
+      - OID: 1.3.6.1.4.1.42040.2.2.1.21
+        name: nasuni.volumeTableNumFileAlerts
+        chart_meta:
+          description: Number of file alerts in volume table
+          family: 'Storage/Volume/Alert'
+          unit: "{alert}"
+      - OID: 1.3.6.1.4.1.42040.2.2.1.22
+        name: nasuni.volumeTableNumExports
+        chart_meta:
+          description: Number of exports in volume table
+          family: 'Storage/Volume/Export'
+          unit: "{export}"
+      - OID: 1.3.6.1.4.1.42040.2.2.1.23
+        name: nasuni.volumeTableNumShares
+        chart_meta:
+          description: Number of shares in volume table
+          family: 'Storage/Volume/Share'
+          unit: "{share}"
+      - OID: 1.3.6.1.4.1.42040.2.2.1.24
+        name: nasuni.volumeTableNumFtpdirs
+        chart_meta:
+          description: Number of FTP directories in volume table
+          family: 'Storage/Volume/FTP/Directory'
+          unit: "{directory}"
+      - OID: 1.3.6.1.4.1.42040.2.2.1.12
+        name: volumeTableIsActive
+        chart_meta:
+          description: indicates whether the volume is active
+          family: 'Storage/Volume/Status/Active'
+          unit: "{status}"
+        mapping:
+          0: 'false'
+          1: 'true'
+      - OID: 1.3.6.1.4.1.42040.2.2.1.13
+        name: volumeTableIsShared
+        chart_meta:
+          description: indicates whether the volume is shared
+          family: 'Storage/Volume/Status/Shared'
+          unit: "{status}"
+        mapping:
+          0: 'false'
+          1: 'true'
+      - OID: 1.3.6.1.4.1.42040.2.2.1.14
+        name: volumeTableIsReadOnly
+        chart_meta:
+          description: indicates whether the volume is read only
+          family: 'Storage/Volume/Status/ReadOnly'
+          unit: "{status}"
+        mapping:
+          0: 'false'
+          1: 'true'
+      - OID: 1.3.6.1.4.1.42040.2.2.1.15
+        name: volumeTableIsPinned
+        chart_meta:
+          description: indicates whether the volume is pinned
+          family: 'Storage/Volume/Status/Pinned'
+          unit: "{status}"
+        mapping:
+          0: 'false'
+          1: 'true'
+      - OID: 1.3.6.1.4.1.42040.2.2.1.16
+        name: volumeTableIsRemote
+        chart_meta:
+          description: indicates whether the volume is remote
+          family: 'Storage/Volume/Status/Remote'
+          unit: "{status}"
+        mapping:
+          0: 'false'
+          1: 'true'
+      - OID: 1.3.6.1.4.1.42040.2.2.1.17
+        name: volumeTableAvEnabled
+        chart_meta:
+          description: indicates whether the antivirus enabled
+          family: 'Security/Status/AntiVirus'
+          unit: "{status}"
+        mapping:
+          0: 'false'
+          1: 'true'
+      - OID: 1.3.6.1.4.1.42040.2.2.1.18
+        name: volumeTableRemoteAccessEnabled
+        chart_meta:
+          description: indicates whether the remote access enabled
+          family: 'Storage/Volume/Status/RemoteAccess'
+          unit: "{status}"
+        mapping:
+          0: 'false'
+          1: 'true'
+    metric_tags:
+      - tag: volume_table_index
+        symbol:
+          OID: 1.3.6.1.4.1.42040.2.2.1.1
+          name: volumeTableIndex
+      - tag: volume_table_description
+        symbol:
+          OID: 1.3.6.1.4.1.42040.2.2.1.2
+          name: volumeTableDescription
+      - tag: volume_table_provider
+        symbol:
+          OID: 1.3.6.1.4.1.42040.2.2.1.3
+          name: volumeTableProvider
+      - tag: volume_table_protocol
+        symbol:
+          OID: 1.3.6.1.4.1.42040.2.2.1.4
+          name: volumeTableProtocol

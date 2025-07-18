@@ -1,0 +1,631 @@
+extends:
+  - _std-if-mib.yaml
+  - _std-ucd-mib.yaml
+  - _hp.yaml
+  - _hp-base.yaml
+
+sysobjectid:
+  - 1.3.6.1.4.1.11.5.7.1.2
+
+# https://mibbrowser.online/mibdb_search.php?mib=CPQRACK-MIB
+# https://github.com/DanielleHuisman/observium-community-edition/blob/main/mibs/hp/CPQRACK-MIB
+
+metrics:
+  - MIB: CPQRACK-MIB
+    table:
+      name: cpqRackCommonEnclosureTempTable
+      OID: 1.3.6.1.4.1.232.22.2.3.1.2
+    symbols:
+      - name: cpqRackCommonEnclosureTempCurrent
+        OID: 1.3.6.1.4.1.232.22.2.3.1.2.1.6
+        chart_meta:
+          description: This is the current temperature sensor reading in degrees celsius
+          family: 'Hardware/Sensor/Temperature/Value'
+          unit: "Cel"
+      - OID: 1.3.6.1.4.1.232.22.2.3.1.2.1.8
+        name: cpqRackCommonEnclosureTempCondition
+        chart_meta:
+          description: The Temperature sensor condition
+          family: 'Hardware/Sensor/Temperature/Status'
+          unit: "{status}"
+        mapping:
+          1: other
+          2: ok
+          3: degraded
+          4: failed
+    metric_tags:
+      - tag: cpq_rack_common_enclosure_temp_rack
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.3.1.2.1.1
+          name: cpqRackCommonEnclosureTempRack
+      - tag: cpq_rack_common_enclosure_temp_chassis
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.3.1.2.1.2
+          name: cpqRackCommonEnclosureTempChassis
+      - tag: cpq_rack_common_enclosure_temp_sensor_index
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.3.1.2.1.3
+          name: cpqRackCommonEnclosureTempSensorIndex
+      - tag: cpq_rack_common_enclosure_temp_sensor_enclosure_name
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.3.1.2.1.4
+          name: cpqRackCommonEnclosureTempSensorEnclosureName
+      - tag: cpq_rack_common_enclosure_temp_location
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.3.1.2.1.5
+          name: cpqRackCommonEnclosureTempLocation
+      - tag: cpq_rack_common_enclosure_temp_type
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.3.1.2.1.9
+          name: cpqRackCommonEnclosureTempType
+        mapping:
+          1: other
+          5: blowout
+          9: caution
+          15: critical
+
+  - MIB: CPQRACK-MIB
+    table:
+      name: cpqRackCommonEnclosureFanTable
+      OID: 1.3.6.1.4.1.232.22.2.3.1.3
+    symbols:
+      - OID: 1.3.6.1.4.1.232.22.2.3.1.3.1.8
+        name: cpqRackCommonEnclosureFanPresent
+        chart_meta:
+          description: This specifies if the fan described is present in the system
+          family: 'Hardware/Fan/Presence/Status'
+          unit: "{status}"
+        mapping:
+          1: other
+          2: absent
+          3: present
+      - OID: 1.3.6.1.4.1.232.22.2.3.1.3.1.9
+        name: cpqRackCommonEnclosureFanRedundant
+        chart_meta:
+          description: This specifies if the fan is in a redundant configuration
+          family: 'Hardware/Fan/Redundancy/Status'
+          unit: "{status}"
+        mapping:
+          1: other
+          2: notRedundant
+          3: redundant
+      - OID: 1.3.6.1.4.1.232.22.2.3.1.3.1.11
+        name: cpqRackCommonEnclosureFanCondition
+        chart_meta:
+          description: The condition of the fan
+          family: 'Hardware/Fan/Status'
+          unit: "{status}"
+        mapping:
+          1: other
+          2: ok
+          3: degraded
+          4: failed
+    metric_tags:
+      - tag: cpq_rack_common_enclosure_fan_rack
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.3.1.3.1.1
+          name: cpqRackCommonEnclosureFanRack
+      - tag: cpq_rack_common_enclosure_fan_chassis
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.3.1.3.1.2
+          name: cpqRackCommonEnclosureFanChassis
+      - tag: cpq_rack_common_enclosure_fan_index
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.3.1.3.1.3
+          name: cpqRackCommonEnclosureFanIndex
+      - tag: _cpq_rack_common_enclosure_fan_location
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.3.1.3.1.5
+          name: cpqRackCommonEnclosureFanLocation
+      - tag: _cpq_rack_common_enclosure_fan_part_number
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.3.1.3.1.6
+          name: cpqRackCommonEnclosureFanPartNumber
+      - tag: _cpq_rack_common_enclosure_fan_spare_part_number
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.3.1.3.1.7
+          name: cpqRackCommonEnclosureFanSparePartNumber
+      - tag: _cpq_rack_common_enclosure_fan_redundant_group_id
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.3.1.3.1.10
+          name: cpqRackCommonEnclosureFanRedundantGroupId
+      - tag: _cpq_rack_common_enclosure_fan_enclosure_serial_num
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.3.1.3.1.12
+          name: cpqRackCommonEnclosureFanEnclosureSerialNum
+
+  - MIB: CPQRACK-MIB
+    table:
+      name: cpqRackCommonEnclosureFuseTable
+      OID: 1.3.6.1.4.1.232.22.2.3.1.4
+    symbols:
+      - OID: 1.3.6.1.4.1.232.22.2.3.1.4.1.6
+        name: cpqRackCommonEnclosureFusePresent
+        chart_meta:
+          description: This specifies if the fuse described is present in the system
+          family: 'Hardware/Fuse/Presence/Status'
+          unit: "{status}"
+        mapping:
+          1: other
+          2: absent
+          3: present
+      - OID: 1.3.6.1.4.1.232.22.2.3.1.4.1.7
+        name: cpqRackCommonEnclosureFuseCondition
+        chart_meta:
+          description: The condition of the fuse
+          family: 'Hardware/Fuse/Status'
+          unit: "{status}"
+        mapping:
+          1: other
+          2: ok
+          4: failed
+    metric_tags:
+      - tag: cpq_rack_common_enclosure_fuse_rack
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.3.1.4.1.1
+          name: cpqRackCommonEnclosureFuseRack
+      - tag: cpq_rack_common_enclosure_fuse_chassis
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.3.1.4.1.2
+          name: cpqRackCommonEnclosureFuseChassis
+      - tag: cpq_rack_common_enclosure_fuse_index
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.3.1.4.1.3
+          name: cpqRackCommonEnclosureFuseIndex
+      - tag: cpq_rack_common_enclosure_fuse_enclosure_name
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.3.1.4.1.4
+          name: cpqRackCommonEnclosureFuseEnclosureName
+      - tag: cpq_rack_common_enclosure_fuse_location
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.3.1.4.1.5
+          name: cpqRackCommonEnclosureFuseLocation
+
+  - MIB: CPQRACK-MIB
+    table:
+      name: cpqRackCommonEnclosureManagerTable
+      OID: 1.3.6.1.4.1.232.22.2.3.1.6
+    symbols:
+      - OID: 1.3.6.1.4.1.232.22.2.3.1.6.1.9
+        name: cpqRackCommonEnclosureManagerRole
+        chart_meta:
+          description: This specifies the current role of the manager
+          family: 'Hardware/EnclosureManager/Role/Status'
+          unit: "{status}"
+        mapping:
+          1: standby
+          2: active
+      - OID: 1.3.6.1.4.1.232.22.2.3.1.6.1.10
+        name: cpqRackCommonEnclosureManagerPresent
+        chart_meta:
+          description: This specifies if the manager described is present in the system
+          family: 'Hardware/EnclosureManager/Presence/Status'
+          unit: "{status}"
+        mapping:
+          1: other
+          2: absent
+          3: present
+      - OID: 1.3.6.1.4.1.232.22.2.3.1.6.1.11
+        name: cpqRackCommonEnclosureManagerRedundant
+        chart_meta:
+          description: This specifies if the manager is in a redundant configuration
+          family: 'Hardware/EnclosureManager/Redundancy/Status'
+          unit: "{status}"
+        mapping:
+          1: other
+          2: notRedundant
+          3: redundant
+      - OID: 1.3.6.1.4.1.232.22.2.3.1.6.1.12
+        name: cpqRackCommonEnclosureManagerCondition
+        chart_meta:
+          description: The condition of the manager
+          family: 'Hardware/EnclosureManager/Status'
+          unit: "{status}"
+        mapping:
+          1: other
+          2: ok
+          3: degraded
+          4: failed
+    metric_tags:
+      - tag: cpq_rack_common_enclosure_manager_enclosure_rack
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.3.1.6.1.1
+          name: cpqRackCommonEnclosureManagerRack
+      - tag: cpq_rack_common_enclosure_manager_enclosure_chassis
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.3.1.6.1.2
+          name: cpqRackCommonEnclosureManagerChassis
+      - tag: cpq_rack_common_enclosure_manager_enclosure_index
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.3.1.6.1.3
+          name: cpqRackCommonEnclosureManagerIndex
+      - tag: _cpq_rack_common_enclosure_manager_enclosure_name
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.3.1.6.1.4
+          name: cpqRackCommonEnclosureManagerEnclosureName
+      - tag: _cpq_rack_common_enclosure_manager_location
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.3.1.6.1.5
+          name: cpqRackCommonEnclosureManagerLocation
+      - tag: _cpq_rack_common_enclosure_manager_part_number
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.3.1.6.1.6
+          name: cpqRackCommonEnclosureManagerPartNumber
+      - tag: _cpq_rack_common_enclosure_manager_spare_part_number
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.3.1.6.1.7
+          name: cpqRackCommonEnclosureManagerSparePartNumber
+      - tag: _cpq_rack_common_enclosure_manager_serial_num
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.3.1.6.1.8
+          name: cpqRackCommonEnclosureManagerSerialNum
+
+  - MIB: CPQRACK-MIB
+    table:
+      name: cpqRackPowerEnclosureTable
+      OID: 1.3.6.1.4.1.232.22.2.3.3.1
+    symbols:
+      - OID: 1.3.6.1.4.1.232.22.2.3.3.1.1.5
+        name: cpqRackPowerEnclosureRedundant
+        chart_meta:
+          description: This indicates if the power supply enclosure is in a redundant state
+          family: 'Hardware/PowerEnclosure/Redundancy/Status'
+          unit: "{status}"
+        mapping:
+          1: other
+          2: notRedundant
+          3: redundant
+      - OID: 1.3.6.1.4.1.232.22.2.3.3.1.1.6
+        name: cpqRackPowerEnclosureLoadBalanced
+        chart_meta:
+          description: This indicates if the power supply enclosure is in a load balanced state
+          family: 'Hardware/PowerEnclosure/LoadBalance/Status'
+          unit: "{status}"
+        mapping:
+          1: other
+          2: notLoadBalanced
+          3: loadBalanced
+      - OID: 1.3.6.1.4.1.232.22.2.3.3.1.1.10
+        name: cpqRackPowerEnclosureBladeAutopoweron
+        chart_meta:
+          description: This indicates current condition of the power enclosure
+          family: 'Hardware/PowerEnclosure/AutoPowerOn/Status'
+          unit: "{status}"
+        mapping:
+          1: other
+          2: disabled
+          3: enabled
+      - OID: 1.3.6.1.4.1.232.22.2.3.3.1.1.9
+        name: cpqRackPowerEnclosureCondition
+        chart_meta:
+          description: This indicates current condition of the power enclosure
+          family: 'Hardware/PowerEnclosure/Status'
+          unit: "{status}"
+        mapping:
+          1: other
+          2: ok
+          3: degraded
+    metric_tags:
+      - tag: cpq_rack_power_enclosure_rack
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.3.3.1.1.1
+          name: cpqRackPowerEnclosureRack
+      - tag: cpq_rack_power_enclosure_index
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.3.3.1.1.2
+          name: cpqRackPowerEnclosureRack
+      - tag: _cpq_rack_power_enclosure_name
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.3.3.1.1.3
+          name: cpqRackPowerEnclosureName
+      - tag: _cpq_rack_power_enclosure_mgmt_board_serial_num
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.3.3.1.1.4
+          name: cpqRackPowerEnclosureMgmtBoardSerialNum
+      - tag: cpq_rack_power_enclosure_input_pwr_type
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.3.3.1.1.7
+          name: cpqRackPowerEnclosureInputPwrType
+        mapping:
+          1: other
+          2: single_phase
+          3: three_phase
+          4: direct_current
+
+  - MIB: CPQRACK-MIB
+    table:
+      name: cpqRackServerBladeTable
+      OID: 1.3.6.1.4.1.232.22.2.4.1.1
+    symbols:
+      - name: cpqRackServerBladeFaultMajor
+        OID: 1.3.6.1.4.1.232.22.2.4.1.1.1.22
+        chart_meta:
+          description: The major fault code of the blade fault reported by the enclosure manager
+          family: 'Hardware/ServerBlade/Fault/Major'
+          unit: "{fault_code}"
+      - name: cpqRackServerBladeFaultMinor
+        OID: 1.3.6.1.4.1.232.22.2.4.1.1.1.23
+        chart_meta:
+          description: The minor fault code of the blade fault reported by the enclosure manager
+          family: 'Hardware/ServerBlade/Fault/Minor'
+          unit: "{fault_code}"
+      - OID: 1.3.6.1.4.1.232.22.2.4.1.1.1.12
+        name: cpqRackServerBladePresent
+        chart_meta:
+          description: This specifies if the server blade described is present in the enclosure
+          family: 'Hardware/ServerBlade/Presence/Status'
+          unit: "{status}"
+        mapping:
+          1: other
+          2: absent
+          3: present
+      - OID: 1.3.6.1.4.1.232.22.2.4.1.1.1.13
+        name: cpqRackServerBladeHasFuses
+        chart_meta:
+          description: This specifies if the server blade contains fuses
+          family: 'Hardware/ServerBlade/Fuse/Status'
+          unit: "{status}"
+        mapping:
+          1: false
+          2: true
+      - OID: 1.3.6.1.4.1.232.22.2.4.1.1.1.35
+        name: cpqRackServerBladePOSTStatus
+        chart_meta:
+          description: Blade server power-on self test (POST) status
+          family: 'Hardware/ServerBlade/POST/Status'
+          unit: "{status}"
+        mapping:
+          1: other
+          2: started
+          3: completed
+          4: failed
+      - OID: 1.3.6.1.4.1.232.22.2.4.1.1.1.21
+        name: cpqRackServerBladeStatus
+        chart_meta:
+          description: The health status of the blade
+          family: 'Hardware/ServerBlade/Status'
+          unit: "{status}"
+        mapping:
+          1: other
+          2: ok
+          3: degraded
+          4: failed
+      - OID: 1.3.6.1.4.1.232.22.2.4.1.1.1.25
+        name: cpqRackServerBladePowered
+        chart_meta:
+          description: The power state of the blade
+          family: 'Hardware/ServerBlade/Power/Status'
+          unit: "{status}"
+        mapping:
+          1: other
+          2: on
+          3: off
+          4: powerStagedOff
+          5: reboot
+      - OID: 1.3.6.1.4.1.232.22.2.4.1.1.1.26
+        name: cpqRackServerBladeUIDState
+        chart_meta:
+          description: The Unit Identifier LED status
+          family: 'Hardware/ServerBlade/UID/Status'
+          unit: "{status}"
+        mapping:
+          1: other
+          2: none
+          3: ledOn
+          4: ledOff
+    metric_tags:
+      - tag: cpq_rack_server_blade_rack
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.4.1.1.1.1
+          name: cpqRackServerBladeRack
+      - tag: cpq_rack_server_blade_chassis
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.4.1.1.1.2
+          name: cpqRackServerBladeChassis
+      - tag: cpq_rack_server_blade_index
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.4.1.1.1.3
+          name: cpqRackServerBladeIndex
+      - tag: _cpq_rack_server_blade_name
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.4.1.1.1.4
+          name: cpqRackServerBladeName
+      - tag: _cpq_rack_server_blade_part_number
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.4.1.1.1.6
+          name: cpqRackServerBladePartNumber
+      - tag: _cpq_rack_server_blade_spare_part_number
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.4.1.1.1.7
+          name: cpqRackServerBladeSparePartNumber
+      - tag: _cpq_rack_server_blade_position
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.4.1.1.1.8
+          name: cpqRackServerBladePosition
+      - tag: _cpq_rack_server_blade_serial_num
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.4.1.1.1.16
+          name: cpqRackServerBladeSerialNum
+      - tag: _cpq_rack_server_blade_product_id
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.4.1.1.1.17
+          name: cpqRackServerBladeProductId
+      - tag: _cpq_rack_server_blade_uid
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.4.1.1.1.18
+          name: cpqRackServerBladeUid
+
+  - MIB: CPQRACK-MIB
+    table:
+      name: cpqRackServerTempSensorTable
+      OID: 1.3.6.1.4.1.232.22.2.4.3.1
+    symbols:
+      - name: cpqRackServerTempSensorCurrent
+        OID: 1.3.6.1.4.1.232.22.2.4.3.1.1.8
+        chart_meta:
+          description: This is the current temperature sensor reading in degrees celsius
+          family: 'Hardware/ServerBlade/Temperature/Value'
+          unit: "Cel"
+      - OID: 1.3.6.1.4.1.232.22.2.4.3.1.1.10
+        name: cpqRackServerTempSensorCondition
+        chart_meta:
+          description: The Temperature sensor condition
+          family: 'Hardware/ServerBlade/Temperature/Status'
+          unit: "{status}"
+        mapping:
+          1: other
+          2: ok
+          3: degraded
+          4: failed
+    metric_tags:
+      - tag: cpq_rack_server_temp_sensor_rack
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.4.3.1.1.1
+          name: cpqRackServerTempSensorRack
+      - tag: cpq_rack_server_temp_sensor_chassis
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.4.3.1.1.2
+          name: cpqRackServerTempSensorChassis
+      - tag: cpq_rack_server_temp_sensor_index
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.4.3.1.1.3
+          name: cpqRackServerTempSensorIndex
+      - tag: _cpq_rack_server_temp_sensor_name
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.4.3.1.1.4
+          name: cpqRackServerTempSensorName
+      - tag: _cpq_rack_server_temp_sensor_location
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.4.3.1.1.7
+          name: cpqRackServerTempSensorLocation
+      - tag: cpq_rack_server_temp_sensor_type
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.4.3.1.1.11
+          name: cpqRackServerTempSensorType
+        mapping:
+          1: other
+          5: blowout
+          9: caution
+          15: critical
+
+  - MIB: CPQRACK-MIB
+    table:
+      name: cpqRackPowerSupplyTable
+      OID: 1.3.6.1.4.1.232.22.2.5.1.1
+    symbols:
+      - name: cpqRackPowerSupplyCurPwrOutput
+        OID: 1.3.6.1.4.1.232.22.2.5.1.1.1.10
+        chart_meta:
+          description: The current power output of the power supply in watts
+          family: 'Hardware/Power/Output/Value'
+          unit: "W"
+      - name: cpqRackPowerSupplyIntakeTemp
+        OID: 1.3.6.1.4.1.232.22.2.5.1.1.1.12
+        chart_meta:
+          description: The current air temperature at the intake of the power supply in degrees celsius
+          family: 'Hardware/Power/Temperature/Intake'
+          unit: "Cel"
+      - name: cpqRackPowerSupplyExhaustTemp
+        OID: 1.3.6.1.4.1.232.22.2.5.1.1.1.13
+        chart_meta:
+          description: The current air temperature at the exhaust of the power supply in degrees celsius
+          family: 'Hardware/Power/Temperature/Exhaust'
+          unit: "Cel"
+      - OID: 1.3.6.1.4.1.232.22.2.5.1.1.1.16
+        name: cpqRackPowerSupplyPresent
+        chart_meta:
+          description: This specifies if the power supply described is present in the enclosure
+          family: 'Hardware/Power/Presence/Status'
+          unit: "{status}"
+        mapping:
+          1: other
+          2: absent
+          3: present
+      - OID: 1.3.6.1.4.1.232.22.2.5.1.1.1.14
+        name: cpqRackPowerSupplyStatus
+        chart_meta:
+          description: The status of the power supply
+          family: 'Hardware/Power/Status'
+          unit: "{status}"
+        mapping:
+          1: noError
+          2: generalFailure
+          3: bistFailure
+          4: fanFailure
+          5: tempFailure
+          6: interlockOpen
+          7: epromFailed
+          8: vrefFailed
+          9: dacFailed
+          10: ramTestFailed
+          11: voltageChannelFailed
+          12: orringdiodeFailed
+          13: brownOut
+          14: giveupOnStartup
+          15: nvramInvalid
+          16: calibrationTableInvalid
+      - OID: 1.3.6.1.4.1.232.22.2.5.1.1.1.15
+        name: cpqRackPowerSupplyInputLineStatus
+        chart_meta:
+          description: The status of line input power
+          family: 'Hardware/Power/Input/Status'
+          unit: "{status}"
+        mapping:
+          1: noError
+          2: lineOverVoltage
+          3: lineUnderVoltage
+          4: lineHit
+          5: brownOut
+          6: linePowerLoss
+      - OID: 1.3.6.1.4.1.232.22.2.5.1.1.1.17
+        name: cpqRackPowerSupplyCondition
+        chart_meta:
+          description: The condition of the power supply
+          family: 'Hardware/Power/Condition/Status'
+          unit: "{status}"
+        mapping:
+          1: other
+          2: ok
+          3: degraded
+          4: failed
+    metric_tags:
+      - tag: cpq_rack_power_supply_enclosure_rack
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.5.1.1.1.1
+          name: cpqRackPowerSupplyEnclosureRack
+      - tag: cpq_rack_power_supply_enclosure_chassis
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.5.1.1.1.2
+          name: cpqRackPowerSupplyEnclosureChassis
+      - tag: cpq_rack_power_supply_enclosure_index
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.5.1.1.1.3
+          name: cpqRackPowerSupplyEnclosureIndex
+      - tag: _cpq_rack_power_supply_enclosure_name
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.5.1.1.1.4
+          name: cpqRackPowerSupplyEnclosureName
+      - tag: _cpq_rack_power_supply_serial_num
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.5.1.1.1.5
+          name: cpqRackPowerSupplySerialNum
+      - tag: _cpq_rack_power_supply_part_number
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.5.1.1.1.6
+          name: cpqRackPowerSupplyPartNumber
+      - tag: _cpq_rack_power_supply_spare_part_number
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.5.1.1.1.7
+          name: cpqRackPowerSupplySparePartNumber
+      - tag: _cpq_rack_power_supply_fw_rev
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.5.1.1.1.8
+          name: cpqRackPowerSupplyFWRev
+      - tag: _cpq_rack_power_supply_max_pwr_output
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.5.1.1.1.9
+          name: cpqRackPowerSupplyMaxPwrOutput
+      - tag: _cpq_rack_power_supply_enclosure_serial_num
+        symbol:
+          OID: 1.3.6.1.4.1.232.22.2.5.1.1.1.18
+          name: cpqRackPowerSupplyEnclosureSerialNum

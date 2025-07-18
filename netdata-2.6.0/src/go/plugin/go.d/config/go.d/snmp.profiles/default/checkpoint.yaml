@@ -1,0 +1,306 @@
+# Profile for Checkpoint devices
+#
+# Example sysDescr:
+# - 1.3.6.1.4.1.2620.1.6.123.1.49   Linux host1 3.10.0-957.21.3cpx86_64 #1 SMP Tue Jan 28 17:26:12 IST 2020 x86_64
+# - 1.3.6.1.4.1.2620.1.6.123.1.56   Linux host2 2.6.18-92cpx86_64 #1 SMP Tue May 16 12:09:46 IDT 2017 x86_64"
+# - 1.3.6.1.4.1.2620.1.6.123.1.56   Linux host3 2.6.18-92cpx86_64 #1 SMP Tue May 16 12:09:46 IDT 2017 x86_64"
+
+extends:
+  - _system-base.yaml
+  - _std-if-mib.yaml
+  - _std-tcp-mib.yaml
+  - _std-udp-mib.yaml
+  - _std-ip-mib.yaml
+
+sysobjectid: 1.3.6.1.4.1.2620.1.*
+
+metadata:
+  device:
+    fields:
+      vendor:
+        value: "Checkpoint"
+      serial_number:
+        symbol:
+          MIB: CHECKPOINT-MIB
+          OID: 1.3.6.1.4.1.2620.1.6.16.3.0
+          name: svnApplianceSerialNumber # Appliance Serial Number
+          # Example: 1711BA4008
+      version:
+        symbol:
+          OID: 1.3.6.1.4.1.2620.1.6.4.1.0
+          name: svnVersion # SVN version
+          # Example: R80.10
+          # Reference to R80.10 here https://supportcenter.checkpoint.com/supportcenter/portal?eventSubmit_doGoviewsolutiondetails=&solutionid=sk111841
+      product_name:
+        symbol:
+          OID: 1.3.6.1.4.1.2620.1.6.1.0
+          name: svnProdName # Product name
+          # Example: SVN Foundation
+      model:
+        symbol:
+          OID: 1.3.6.1.4.1.2620.1.6.16.7.0
+          name: svnApplianceProductName # Appliance Product Name
+          # Example: Check Point 3200
+      os_name:
+        symbol:
+          OID: 1.3.6.1.4.1.2620.1.6.5.1.0
+          name: osName # OS name
+      os_version:
+        symbol:
+          OID: 1.3.6.1.4.1.2620.1.2.1.1.0
+          name: sysDescr
+          extract_value: 'Linux\s+\S+\s+(\d+(?:\.\d+)*)'
+          # Example: `3.10.0` in `Linux host1 3.10.0-957.21.3cpx86_64`
+          #
+          # Note: The os version is also stored in two separate OIDs for major and minor. Example:
+          #       .1.3.6.1.4.1.2620.1.6.5.2.0 (osMajorVer) = 2
+          #       .1.3.6.1.4.1.2620.1.6.5.3.0 (osMinorVer) = 6
+          #       In this example, the OS Version is 2.6, at the moment it's not possible to add metadata based on 2 OIDs
+      type:
+        value: "Firewall"
+
+metrics:
+  # CPU
+  - MIB: CHECKPOINT-MIB
+    table:
+      OID: 1.3.6.1.4.1.2620.1.6.7.5
+      name: multiProcTable
+    # TODO, MIB does not have description for these in order to evaluate units
+    symbols:
+      - OID: 1.3.6.1.4.1.2620.1.6.7.5.1.2
+        name: multiProcUserTime
+        chart_meta:
+          description: "Processor user time"
+          family: 'System/CPU/Time/User'
+          unit: "%"
+      - OID: 1.3.6.1.4.1.2620.1.6.7.5.1.3
+        name: multiProcSystemTime
+        chart_meta:
+          description: "Processor system time"
+          family: 'System/CPU/Time/System'
+          unit: "%"
+      - OID: 1.3.6.1.4.1.2620.1.6.7.5.1.4
+        name: multiProcIdleTime
+        chart_meta:
+          description: "Processor idle time"
+          family: 'System/CPU/Time/Idle'
+          unit: "%"
+      - OID: 1.3.6.1.4.1.2620.1.6.7.5.1.5
+        name: multiProcUsage
+        chart_meta:
+          description: "Processor usage"
+          family: 'System/CPU/Usage'
+          unit: "%"
+    metric_tags:
+      - symbol:
+          OID: 1.3.6.1.4.1.2620.1.6.7.5.1.1
+          name: multiProcIndex
+        tag: cpu_core
+  - MIB: CHECKPOINT-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.2620.1.6.7.2.7.0
+      name: procNum
+      chart_meta:
+        description: "Number of processors"
+        family: 'System/CPU/Count'
+        unit: "{processor}"
+    # Memory
+  - MIB: CHECKPOINT-MIB
+    metric_type: gauge
+    symbol:
+      OID: 1.3.6.1.4.1.2620.1.6.7.4.3.0
+      name: memTotalReal64
+      chart_meta:
+        description: "Total real memory"
+        family: 'System/Memory/Real/Total'
+        unit: "By"
+  - MIB: CHECKPOINT-MIB
+    metric_type: gauge
+    symbol:
+      OID: 1.3.6.1.4.1.2620.1.6.7.4.4.0
+      name: memActiveReal64
+      chart_meta:
+        description: "Active real memory"
+        family: 'System/Memory/Real/Active'
+        unit: "By"
+  - MIB: CHECKPOINT-MIB
+    metric_type: gauge
+    symbol:
+      OID: 1.3.6.1.4.1.2620.1.6.7.4.5.0
+      name: memFreeReal64
+      chart_meta:
+        description: "Free real memory"
+        family: 'System/Memory/Real/Free'
+        unit: "By"
+  - MIB: CHECKPOINT-MIB
+    metric_type: gauge
+    symbol:
+      OID: 1.3.6.1.4.1.2620.1.6.7.4.1.0
+      name: memTotalVirtual64
+      chart_meta:
+        description: "Total virtual memory"
+        family: 'System/Memory/Virtual/Total'
+        unit: "By"
+  - MIB: CHECKPOINT-MIB
+    metric_type: gauge
+    symbol:
+      OID: 1.3.6.1.4.1.2620.1.6.7.4.2.0
+      name: memActiveVirtual64
+      chart_meta:
+        description: "Active virtual memory"
+        family: 'System/Memory/Virtual/Active'
+        unit: "By"
+    # Disk
+  - MIB: CHECKPOINT-MIB
+    metric_type: gauge
+    table:
+      OID: 1.3.6.1.4.1.2620.1.6.7.6
+      name: multiDiskTable
+    symbols:
+      - OID: 1.3.6.1.4.1.2620.1.6.7.6.1.3
+        name: multiDiskSize
+        chart_meta:
+          description: "Disk size"
+          family: 'System/Disk/Size/Total'
+          unit: "GBy"
+      - OID: 1.3.6.1.4.1.2620.1.6.7.6.1.4
+        name: multiDiskUsed
+        chart_meta:
+          description: "Disk used"
+          family: 'System/Disk/Size/Used'
+          unit: "GBy"
+      - OID: 1.3.6.1.4.1.2620.1.6.7.6.1.5
+        name: multiDiskFreeTotalBytes
+        chart_meta:
+          description: "Disk free total bytes"
+          family: 'System/Disk/Size/Free'
+          unit: "By"
+      - OID: 1.3.6.1.4.1.2620.1.6.7.6.1.7
+        name: multiDiskFreeAvailableBytes
+        chart_meta:
+          description: "Disk free available bytes"
+          family: 'System/Disk/Size/Available'
+          unit: "By"
+      - OID: 1.3.6.1.4.1.2620.1.6.7.6.1.6
+        name: multiDiskFreeTotalPercent
+        chart_meta:
+          description: "Disk free total percent"
+          family: 'System/Disk/Free'
+          unit: "%"
+      - OID: 1.3.6.1.4.1.2620.1.6.7.6.1.8
+        name: multiDiskFreeAvailablePercent
+        chart_meta:
+          description: "Disk free available percent"
+          family: 'System/Disk/Available'
+          unit: "%"
+    metric_tags:
+      - symbol:
+          OID: 1.3.6.1.4.1.2620.1.6.7.6.1.1
+          name: multiDiskIndex
+        tag: disk_index
+      - symbol:
+          OID: 1.3.6.1.4.1.2620.1.6.7.6.1.2
+          name: multiDiskName
+        tag: disk_name
+    # Appliances
+  - MIB: CHECKPOINT-MIB
+    table:
+      OID: 1.3.6.1.4.1.2620.1.6.7.8.2
+      name: fanSpeedSensorTable
+    symbols:
+      - OID: 1.3.6.1.4.1.2620.1.6.7.8.2.1.3
+        name: fanSpeedSensorValue
+        chart_meta:
+          description: "Sensor value"
+          family: 'Hardware/Sensor/FanSpeed/Value'
+          unit: "{revolution}/s"
+      - OID: 1.3.6.1.4.1.2620.1.6.7.8.2.1.6
+        name: fanSpeedSensorStatus
+        chart_meta:
+          description: "Sensor is out of range true(1), false(0), reading error(2)"
+          family: 'Hardware/Sensor/FanSpeed/Status'
+          unit: "{status}"
+        mapping:
+          0: ok
+          1: out_of_range
+          2: reading_error
+    metric_tags:
+      - symbol:
+          OID: 1.3.6.1.4.1.2620.1.6.7.8.2.1.1
+          name: fanSpeedSensorIndex
+        tag: sensor_index
+      - symbol:
+          OID: 1.3.6.1.4.1.2620.1.6.7.8.2.1.2
+          name: fanSpeedSensorName
+        tag: sensor_name
+  - MIB: CHECKPOINT-MIB
+    table:
+      OID: 1.3.6.1.4.1.2620.1.6.7.8.1
+      name: tempertureSensorTable
+    symbols:
+      - OID: 1.3.6.1.4.1.2620.1.6.7.8.1.1.3
+        name: tempertureSensorValue
+        chart_meta:
+          description: "Sensor value"
+          family: 'Hardware/Sensor/Temperature/Value'
+          unit: "Cel"
+      - OID: 1.3.6.1.4.1.2620.1.6.7.8.1.1.6
+        name: tempertureSensorStatus
+        chart_meta:
+          description: "Sensor is out of range true(1), false(0), reading error(2)"
+          family: 'Hardware/Sensor/Temperature/Status'
+          unit: "{status}"
+        mapping:
+          0: ok
+          1: out_of_range
+          2: reading_error
+    metric_tags:
+      - symbol:
+          OID: 1.3.6.1.4.1.2620.1.6.7.8.1.1.1
+          name: tempertureSensorIndex
+        tag: sensor_index
+      - symbol:
+          OID: 1.3.6.1.4.1.2620.1.6.7.8.1.1.2
+          name: tempertureSensorName
+        tag: sensor_name
+    # Network
+  - MIB: CHECKPOINT-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.2620.1.1.4.0
+      name: fwAccepted
+      chart_meta:
+        description: "Number of accepted packets"
+        family: 'Security/Firewall/Packet/Accepted'
+        unit: "{packet}/s"
+  - MIB: CHECKPOINT-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.2620.1.1.6.0
+      name: fwDropped
+      chart_meta:
+        description: "Number of dropped packets"
+        family: 'Security/Firewall/Packet/Dropped'
+        unit: "{packet}/s"
+  - MIB: CHECKPOINT-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.2620.1.1.5.0
+      name: fwRejected
+      chart_meta:
+        description: "Number of rejected packets"
+        family: 'Security/Firewall/Packet/Rejected'
+        unit: "{packet}/s"
+  - MIB: CHECKPOINT-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.2620.1.1.25.3.0
+      name: fwNumConn
+      chart_meta:
+        description: "Number of connections"
+        family: 'System/Activity/Connection/Active'
+        unit: "{connection}"
+  - MIB: CHECKPOINT-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.2620.1.1.25.4.0
+      name: fwPeakNumConn
+      chart_meta:
+        description: "Peak number of connections"
+        family: 'System/Activity/Connection/Peak'
+        unit: "{connection}/s"

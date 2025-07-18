@@ -1,0 +1,93 @@
+metrics:
+  - MIB: RTP-MIB
+    table:
+      name: rtpSessionTable
+      OID: 1.3.6.1.2.1.87.1.3
+    symbols:
+      - OID: 1.3.6.1.2.1.87.1.3.1.6
+        name: rtpSessionSenderJoins
+        chart_meta:
+          family: 'Network/VoIP/RTP/Session/Join/Sender'
+          description: The number of senders that have been observed to have joined the session since this conceptual row was created
+          unit: "{sender}"
+      - OID: 1.3.6.1.2.1.87.1.3.1.7
+        name: rtpSessionReceiverJoins
+        chart_meta:
+          family: 'Network/VoIP/RTP/Session/Join/Receiver'
+          description: The number of receivers that have been been observed to have joined this session since this conceptual row was created
+          unit: "{receiver}"
+      - OID: 1.3.6.1.2.1.87.1.3.1.8
+        name: rtpSessionByes
+        chart_meta:
+          family: 'Network/VoIP/RTP/Session/Message/Bye/In'
+          description: "A count of RTCP BYE messages received by this entity"
+          unit: "{message}"
+    metric_tags:
+      - index: 1
+        tag: rtpSessionIndex
+      - tag: rtpSessionRemAddr
+        symbol:
+          OID: 1.3.6.1.2.1.87.1.3.1.3
+          name: rtpSessionRemAddr
+      - tag: rtpSessionLocAddr
+        symbol:
+          OID: 1.3.6.1.2.1.87.1.3.1.4
+          name: rtpSessionLocAddr
+  - MIB: RTP-MIB
+    table:
+      name: rtpSenderTable
+      OID: 1.3.6.1.2.1.87.1.5
+    symbols:
+      - OID: 1.3.6.1.2.1.87.1.5.1.4
+        name: rtpSenderPackets
+        chart_meta:
+          family: 'Network/VoIP/RTP/Sender/Packet/Out'
+          description: Count of RTP packets sent by this sender, or observed by an RTP monitor, since rtpSenderStartTime
+          unit: "{packet}"
+      - OID: 1.3.6.1.2.1.87.1.5.1.5
+        name: rtpSenderOctets
+        chart_meta:
+          family: 'Network/VoIP/RTP/Sender/Traffic/Out'
+          description: Count of non-header RTP octets sent by this sender, or observed by an RTP monitor, since rtpSenderStartTime
+          unit: "By"
+    metric_tags:
+      - index: 1
+        tag: rtpSessionIndex
+      - index: 2
+        tag: rtpSenderSSRC
+  - MIB: RTP-MIB
+    table:
+      name: rtpRcvrTable
+      OID: 1.3.6.1.2.1.87.1.7
+    symbols:
+      - OID: 1.3.6.1.2.1.87.1.7.1.13
+        name: rtpRcvrOctets
+        chart_meta:
+          family: 'Network/VoIP/RTP/Receiver/Traffic/In'
+          description: Count of non-header RTP octets received by this receiving RTP host since rtpRcvrStartTime
+          unit: "By"
+      - OID: 1.3.6.1.2.1.87.1.7.1.12
+        name: rtpRcvrPackets
+        chart_meta:
+          family: 'Network/VoIP/RTP/Receiver/Packet/In'
+          description: Count of RTP packets received by this RTP host receiver since rtpRcvrStartTime
+          unit: "{packet}"
+      - OID: 1.3.6.1.2.1.87.1.7.1.7
+        name: rtpRcvrJitter
+        chart_meta:
+          family: 'Network/VoIP/RTP/Receiver/Jitter/Value'
+          description: An estimate of delay variation as observed by this receiver
+          unit: "ms"
+      - OID: 1.3.6.1.2.1.87.1.7.1.6
+        name: rtpRcvrLostPackets
+        chart_meta:
+          family: 'Network/VoIP/RTP/Receiver/Packet/Lost'
+          description: A count of RTP packets lost as observed by this receiver since rtpRcvrStartTime
+          unit: "{packet}"
+    metric_tags:
+      - index: 1
+        tag: rtpSessionIndex
+      - index: 2
+        tag: rtpRcvrSRCSSRC
+      - index: 3
+        tag: rtpRcvrSSRC

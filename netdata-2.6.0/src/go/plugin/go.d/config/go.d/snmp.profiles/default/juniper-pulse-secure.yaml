@@ -1,0 +1,196 @@
+extends:
+  - _std-host-resources-mib-feat-base.yaml
+  - _std-if-mib.yaml
+  - _std-ucd-mib.yaml
+  - _juniper.yaml
+
+sysobjectid: 1.3.6.1.4.1.12532.256.*
+
+# Juniper IVE (Intelligent Virtual Enterprise)
+metadata:
+  device:
+    fields:
+      type:
+        value: VPN
+      vendor:
+        value: Juniper
+
+metric_tags:
+  # MIB: PULSESECURE-PSG-MIB
+  - tag: juniper_ive_product_name
+    OID: 1.3.6.1.4.1.12532.6.0
+    symbol: productName
+    # MIB: PULSESECURE-PSG-MIB
+  - tag: juniper_ive_product_version
+    OID: 1.3.6.1.4.1.12532.7.0
+    symbol: productVersion
+    # MIB: PULSESECURE-PSG-MIB
+  - tag: juniper_ive_esap_version
+    OID: 1.3.6.1.4.1.12532.45.0
+    symbol: esapVersion
+    # MIB: PULSESECURE-PSG-MIB
+  - tag: juniper_ive_ive_max_concurrent_users_license_capacity
+    OID: 1.3.6.1.4.1.12532.55.0
+    symbol: iveMaxConcurrentUsersLicenseCapacity
+
+metrics:
+  - MIB: JUNIPER-IVE-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.12532.10.0
+      name: iveCpuUtil
+      chart_meta:
+        description: The cpu utilization of the ive system
+        family: 'System/CPU/Usage'
+        unit: "%"
+  - MIB: JUNIPER-IVE-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.12532.11.0
+      name: iveMemoryUtil
+      chart_meta:
+        description: The memory utilization of the ive system
+        family: 'System/Memory/Usage'
+        unit: "%"
+  - MIB: JUNIPER-IVE-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.12532.24.0
+      name: iveSwapUtil
+      chart_meta:
+        description: The swap utilization of the ive system
+        family: 'System/Memory/Swap/Usage'
+        unit: "%"
+  - MIB: JUNIPER-IVE-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.12532.1.0
+      name: logFullPercent
+      chart_meta:
+        description: Percentage of log file full
+        family: 'System/Disk/Log/Usage'
+        unit: "%"
+  - MIB: JUNIPER-IVE-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.12532.25.0
+      name: diskFullPercent
+      chart_meta:
+        description: Percentage of disk space full
+        family: 'System/Disk/Usage'
+        unit: "%"
+  - MIB: JUNIPER-IVE-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.12532.42.0
+      name: iveTemperature
+      chart_meta:
+        description: The Temperature of MAG application blade
+        family: 'Hardware/Temperature/Value'
+        unit: "Cel"
+  - MIB: JUNIPER-IVE-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.12532.2.0
+      name: signedInWebUsers
+      chart_meta:
+        description: Number of signed-in web users
+        family: 'Network/VPN/User/Active/Web'
+        unit: "{user}"
+  - MIB: JUNIPER-IVE-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.12532.3.0
+      name: signedInMailUsers
+      chart_meta:
+        description: Number of signed-in mail users
+        family: 'Network/VPN/User/Active/Mail'
+        unit: "{user}"
+  - MIB: JUNIPER-IVE-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.12532.43.0
+      name: iveVPNTunnels
+      chart_meta:
+        description: The number of concurrent pulse ipsec and nc users
+        family: 'Network/VPN/Tunnel/Active'
+        unit: "{tunnel}"
+  - MIB: JUNIPER-IVE-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.12532.12.0
+      name: iveConcurrentUsers
+      chart_meta:
+        description: The total number of concurrent user licenses used for the ive node
+        family: 'System/License/User/Node/Used'
+        unit: "{license}"
+  - MIB: JUNIPER-IVE-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.12532.13.0
+      name: clusterConcurrentUsers
+      chart_meta:
+        description: The total number of concurrent user licenses used for the cluster
+        family: 'System/License/User/Cluster/Used'
+        unit: "{license}"
+  - MIB: JUNIPER-IVE-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.12532.14.0
+      name: iveTotalHits
+      chart_meta:
+        description: The total number of hits to the ive since last reboot
+        family: 'Network/VPN/Hit/Total'
+        unit: "{hit}/s"
+  - MIB: JUNIPER-IVE-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.12532.15.0
+      name: iveFileHits
+      chart_meta:
+        description: The total number of file hits to the ive since last reboot
+        family: 'Network/VPN/Hit/File'
+        unit: "{hit}/s"
+  - MIB: JUNIPER-IVE-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.12532.16.0
+      name: iveWebHits
+      chart_meta:
+        description: The total number of hits via the web interface since the last reboot
+        family: 'Network/VPN/Hit/Web'
+        unit: "{hit}/s"
+  - MIB: JUNIPER-IVE-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.12532.17.0
+      name: iveAppletHits
+      chart_meta:
+        description: The total number of applet hits to the ive since last reboot
+        family: 'Network/VPN/Hit/Applet'
+        unit: "{hit}/s"
+  - MIB: JUNIPER-IVE-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.12532.18.0
+      name: ivetermHits
+      chart_meta:
+        description: The total number of terminal hits to the ive since last reboot
+        family: 'Network/VPN/Hit/Terminal'
+        unit: "{hit}/s"
+  - MIB: JUNIPER-IVE-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.12532.19.0
+      name: iveSAMHits
+      chart_meta:
+        description: The total number of sam secure application manager hits since last reboot
+        family: 'Network/VPN/Hit/SAM'
+        unit: "{hit}/s"
+  - MIB: JUNIPER-IVE-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.12532.20.0
+      name: iveNCHits
+      chart_meta:
+        description: The total number of nc network connect hits since last reboot
+        family: 'Network/VPN/Hit/NetworkConnect'
+        unit: "{hit}/s"
+  - MIB: JUNIPER-IVE-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.12532.21.0
+      name: meetingHits
+      chart_meta:
+        description: The total number of meeting hits since last reboot
+        family: 'Network/VPN/Hit/Meeting'
+        unit: "{hit}/s"
+  - MIB: JUNIPER-IVE-MIB
+    symbol:
+      OID: 1.3.6.1.4.1.12532.44.0
+      name: iveSSLConnections
+      chart_meta:
+        description: Total number of ssl connection
+        family: 'Network/SSL/Connection/Active'
+        unit: "{connection}"

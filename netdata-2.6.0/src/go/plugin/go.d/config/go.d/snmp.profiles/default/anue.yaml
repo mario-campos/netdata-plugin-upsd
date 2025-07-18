@@ -1,0 +1,14 @@
+extends:
+  - _system-base.yaml
+  - _std-if-mib.yaml
+
+metadata:
+  device:
+    fields:
+      vendor:
+        value: Anue
+
+# TODO, there exists a MIB for Anue, explore.
+
+sysobjectid:
+  - 1.3.6.1.4.1.32620.1.*

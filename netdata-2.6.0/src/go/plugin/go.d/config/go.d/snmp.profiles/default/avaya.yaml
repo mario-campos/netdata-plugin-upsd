@@ -1,0 +1,9 @@
+extends:
+  - _system-base.yaml
+  - _avaya-utilization-management-mib.yaml
+
+metadata:
+  device:
+    fields:
+      vendor:
+        value: "Avaya"

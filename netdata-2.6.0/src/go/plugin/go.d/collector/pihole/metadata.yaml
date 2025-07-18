@@ -1,0 +1,290 @@
+plugin_name: go.d.plugin
+modules:
+  - meta:
+      id: collector-go.d.plugin-pihole
+      plugin_name: go.d.plugin
+      module_name: pihole
+      monitored_instance:
+        name: Pi-hole
+        link: https://pi-hole.net
+        icon_filename: pihole.png
+        categories:
+          - data-collection.dns-and-dhcp-servers
+      keywords:
+        - pihole
+      related_resources:
+        integrations:
+          list: []
+      info_provided_to_referring_integrations:
+        description: ""
+      most_popular: false
+    overview:
+      data_collection:
+        metrics_description: |
+          This collector monitors Pi-hole instances using [Pi-hole API 6.0](https://ftl.pi-hole.net/master/docs/).
+          
+          It collects DNS query statistics including total queries, blocked domains, query types, resolution status, and client information.
+          
+          **Note**: This collector is not compatible with Pi-hole versions earlier than v6.0.
+        method_description: ""
+      supported_platforms:
+        include: []
+        exclude: []
+      multi_instance: true
+      additional_permissions:
+        description: ""
+      default_behavior:
+        auto_detection:
+          description: |
+            By default, it detects Pi-hole instances running on:
+            
+            - localhost that are listening on port 80
+            - within Docker containers
+
+            > **Note that the Pi-hole API 6.0 requires a password**. 
+            > While Netdata can automatically detect Pi-hole instances and create data collection jobs, these jobs will fail unless you provide the necessary credentials.
+        limits:
+          description: ""
+        performance_impact:
+          description: ""
+    setup:
+      prerequisites:
+        list:
+          - title: Pi-hole v6.0 or newer
+            description: |
+              This collector requires Pi-hole v6.0 or newer as it uses the [Pi-hole API 6.0](https://ftl.pi-hole.net/master/docs/).
+          - title: Authentication credentials
+            description: |
+              Pi-hole administrator password is required for API authentication. Make sure to configure this in the collector settings even when using auto-detection.
+      configuration:
+        file:
+          name: go.d/pihole.conf
+        options:
+          description: |
+            The following options can be defined globally: update_every, autodetection_retry.
+          folding:
+            title: Config options
+            enabled: true
+          list:
+            - name: update_every
+              description: Data collection frequency.
+              default_value: 1
+              required: false
+            - name: autodetection_retry
+              description: Recheck interval in seconds. Zero means no recheck will be scheduled.
+              default_value: 0
+              required: false
+            - name: url
+              description: Server URL.
+              default_value: http://127.0.0.1
+              required: true
+            - name: timeout
+              description: HTTP request timeout.
+              default_value: 1
+              required: false
+            - name: username
+              description: Username for basic HTTP authentication.
+              default_value: ""
+              required: false
+            - name: password
+              description: Password for basic HTTP authentication.
+              default_value: ""
+              required: true
+            - name: proxy_url
+              description: Proxy URL.
+              default_value: ""
+              required: false
+            - name: proxy_username
+              description: Username for proxy basic HTTP authentication.
+              default_value: ""
+              required: false
+            - name: proxy_password
+              description: Password for proxy basic HTTP authentication.
+              default_value: ""
+              required: false
+            - name: method
+              description: HTTP request method.
+              default_value: GET
+              required: false
+            - name: body
+              description: HTTP request body.
+              default_value: ""
+              required: false
+            - name: headers
+              description: HTTP request headers.
+              default_value: ""
+              required: false
+            - name: not_follow_redirects
+              description: Redirect handling policy. Controls whether the client follows redirects.
+              default_value: false
+              required: false
+            - name: tls_skip_verify
+              description: Server certificate chain and hostname validation policy. Controls whether the client performs this check.
+              default_value: false
+              required: false
+            - name: tls_ca
+              description: Certification authority that the client uses when verifying the server's certificates.
+              default_value: ""
+              required: false
+            - name: tls_cert
+              description: Client TLS certificate.
+              default_value: ""
+              required: false
+            - name: tls_key
+              description: Client TLS key.
+              default_value: ""
+              required: false
+        examples:
+          folding:
+            title: Config
+            enabled: true
+          list:
+            - name: Basic
+              description: A basic example configuration.
+              config: |
+                jobs:
+                  - name: local
+                    url: http://127.0.0.1
+                    password: Gv7#pQm9Xy
+            - name: HTTPS with self-signed certificate
+              description: Remote instance with enabled HTTPS and self-signed certificate.
+              config: |
+                jobs:
+                  - name: local
+                    url: https://203.0.113.11
+                    tls_skip_verify: yes
+                    password: bT4@zK1wVr
+            - name: Multi-instance
+              description: |
+                > **Note**: When you define multiple jobs, their names must be unique.
+                
+                Collecting metrics from local and remote instances.
+              config: |
+                jobs:
+                  - name: local
+                    url: http://127.0.0.1
+                    password: Gv7#pQm9Xy
+                
+                  - name: remote
+                    url: http://203.0.113.10
+                    password: bT4@zK1wVr
+    troubleshooting:
+      problems:
+        list: []
+    alerts:
+      - name: pihole_gravity_list_last_update
+        metric: pihole.gravity_list_last_update_time_ago
+        info: "gravity.list (blocklist) file last update time"
+        link: https://github.com/netdata/netdata/blob/master/src/health/health.d/pihole.conf
+    metrics:
+      folding:
+        title: Metrics
+        enabled: false
+      description: ""
+      availability: []
+      scopes:
+        - name: global
+          description: These metrics refer to the entire monitored application.
+          labels: []
+          metrics:
+            - name: pihole.dns_queries_total
+              description: Pi-hole DNS Queries Total (Cached, Blocked and Forwarded)
+              unit: queries/s
+              chart_type: line
+              dimensions:
+                - name: queries
+            - name: pihole.dns_queries_blocked_percent
+              description: Pi-hole DNS Queries Blocked Percent
+              unit: percent
+              chart_type: line
+              dimensions:
+                - name: blocked
+            - name: pihole.dns_queries_by_destination
+              description: Pi-hole DNS Queries by Destination
+              unit: queries/s
+              chart_type: stacked
+              dimensions:
+                - name: cached
+                - name: blocked
+                - name: forwarded
+            - name: pihole.dns_queries_by_type
+              description: Pi-hole DNS Queries by Type
+              unit: queries/s
+              chart_type: stacked
+              dimensions:
+                - name: A
+                - name: AAA
+                - name: ANY
+                - name: SRV
+                - name: SOA
+                - name: PTR
+                - name: TXT
+                - name: NAPTR
+                - name: MX
+                - name: DS
+                - name: RRSIG
+                - name: DNSKEY
+                - name: NS
+                - name: SVCB
+                - name: HTTPS
+                - name: OTHER
+            - name: pihole.dns_queries_by_status
+              description: Pi-hole DNS Queries by Status
+              unit: queries/s
+              chart_type: stacked
+              dimensions:
+                - name: UNKNOWN
+                - name: GRAVITY
+                - name: FORWARDED
+                - name: CACHE
+                - name: REGEX
+                - name: DENYLIST
+                - name: EXTERNAL_BLOCKED_IP
+                - name: EXTERNAL_BLOCKED_NULL
+                - name: EXTERNAL_BLOCKED_NXRA
+                - name: GRAVITY_CNAME
+                - name: REGEX_CNAME
+                - name: DENYLIST_CNAME
+                - name: RETRIED
+                - name: RETRIED_DNSSEC
+                - name: IN_PROGRESS
+                - name: DBBUSY
+                - name: SPECIAL_DOMAIN
+                - name: CACHE_STALE
+                - name: EXTERNAL_BLOCKED_EDE15
+            - name: pihole.dns_replies_by_status
+              description: Pi-hole DNS Replies by Status
+              unit: replies/s
+              chart_type: stacked
+              dimensions:
+                - name: UNKNOWN
+                - name: NODATA
+                - name: NXDOMAIN
+                - name: CNAME
+                - name: IP
+                - name: DOMAIN
+                - name: RRNAME
+                - name: SERVFAIL
+                - name: REFUSED
+                - name: NOTIMP
+                - name: DNSSEC
+                - name: NONE
+                - name: OTHER
+            - name: pihole.active_clients
+              description: Pi-hole Active Clients (Seen in the Last 24 Hours)
+              unit: clients
+              chart_type: line
+              dimensions:
+                - name: active
+            - name: pihole.gravity_list_blocked_domains
+              description: Pi-hole Gravity List Blocked Domains
+              unit: domains
+              chart_type: line
+              dimensions:
+                - name: blocked
+            - name: pihole.gravity_list_last_update_time_ago
+              description: Pi-hole Gravity List Time Since Last Update
+              unit: seconds
+              chart_type: line
+              dimensions:
+                - name: last_update_ago

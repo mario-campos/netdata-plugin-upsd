@@ -1,0 +1,7 @@
+extends:
+  - _system-base.yaml
+metadata:
+  device:
+    fields:
+      vendor:
+        value: "ibm"
