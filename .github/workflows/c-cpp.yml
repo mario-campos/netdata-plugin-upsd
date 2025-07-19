@@ -18,5 +18,5 @@ jobs:
           sudo netdata-*/packaging/installer/install-required-packages.sh --dont-wait --non-interactive netdata
       - name: build
         run: |
-          cmake -B build
+          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug
           cmake --build build --target upsd.plugin

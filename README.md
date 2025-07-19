@@ -8,8 +8,17 @@ In particular, upsd.plugin is a lightweight alternative to Netdata's [upsd Go mo
 
 ### Build
 
+#### Release
+
 ```shell
-cmake -B build
+cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build build --target upsd.plugin
+```
+
+#### Debug
+
+```shell
+cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug
 cmake --build build --target upsd.plugin
 ```
 
